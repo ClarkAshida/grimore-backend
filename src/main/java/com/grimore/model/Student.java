@@ -31,13 +31,16 @@ public class Student {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "university_name", nullable = false)
+    @Column(name = "university_name")
+    @Size(max = 255, message = "Nome da universidade não pode exceder 255 caracteres")
     private String universityName;
 
-    @Column(name = "course_name", nullable = false)
+    @Size(max = 255, message = "Nome do curso não pode exceder 255 caracteres")
+    @Column(name = "course_name")
     private String courseName;
 
     @Min(value = 1, message = "Semestre deve ser maior que 0")
+    @NotNull(message = "Semestre atual é obrigatório")
     @Column(name = "current_semester", nullable = false)
     private Integer currentSemester;
 }

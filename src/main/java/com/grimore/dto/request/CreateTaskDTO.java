@@ -28,8 +28,10 @@ public record CreateTaskDTO(
     LocalDateTime dueDate,
 
     @Min(value = 0, message = "Peso da nota não pode ser negativo")
+    @Max(value = 10, message = "Peso da nota não pode ser maior que 10")
     Double gradeWeight,
 
     @Min(value = 0, message = "Nota obtida não pode ser negativa")
+    @Max(value = 10, message = "Nota obtida não pode ser maior que 10")
     Double gradeObtained
 ) {}

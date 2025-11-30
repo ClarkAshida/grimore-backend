@@ -1,7 +1,9 @@
 package com.grimore.dto.response;
 
+import com.grimore.enums.DisciplineNature;
 import com.grimore.enums.DisciplineStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.grimore.enums.TotalHours;
 
 import java.util.UUID;
 
@@ -12,9 +14,10 @@ public record DisciplineDTO(
     String name,
     String code,
     String location,
+    DisciplineNature nature,
     Integer semester,
     DisciplineStatus status,
-    Integer totalHours,
+    TotalHours totalHours,
     Integer absencesCount,
     String classSchedules
 ) {}

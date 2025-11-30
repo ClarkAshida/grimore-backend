@@ -48,14 +48,17 @@ public class Task {
     @Column(nullable = false)
     private TaskPriority priority = TaskPriority.MEDIUM;
 
+    @NotNull(message = "Data de entrega é obrigatória")
     @Column(name = "due_date", nullable = false)
     private LocalDateTime dueDate;
 
     @Min(value = 0, message = "Peso da nota não pode ser negativo")
+    @Max(value = 10, message = "Peso da nota não pode ser maior que 10")
     @Column(name = "grade_weight")
     private Double gradeWeight;
 
     @Min(value = 0, message = "Nota obtida não pode ser negativa")
+    @Max(value = 10, message = "Nota obtida não pode ser maior que 10")
     @Column(name = "grade_obtained")
     private Double gradeObtained;
 }

@@ -46,6 +46,7 @@ public class Discipline {
     private Integer semester;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "Status da disciplina é obrigatório")
     @Column(nullable = false)
     private DisciplineStatus status = DisciplineStatus.ACTIVE;
 
