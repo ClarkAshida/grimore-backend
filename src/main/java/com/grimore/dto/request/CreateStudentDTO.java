@@ -20,6 +20,5 @@ public record CreateStudentDTO(
 
     @NotNull(message = "Semestre atual é obrigatório")
     @Min(value = 1, message = "Semestre deve ser no mínimo 1")
-    @Max(value = 12, message = "Semestre deve ser no máximo 12")
     Integer currentSemester
 ) {}
