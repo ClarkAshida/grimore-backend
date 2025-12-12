@@ -65,14 +65,6 @@ package com.grimore.service;
                         disciplineRepository.save(discipline);
                     }
 
-                    @Transactional
-                    public void delete(Integer id) {
-                        if (!disciplineRepository.existsById(id)) {
-                            throw new EntityNotFoundException("Disciplina não encontrada");
-                        }
-                        disciplineRepository.deleteById(id);
-                    }
-
                     private Discipline findDisciplineById(Integer id) {
                         return disciplineRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Disciplina não encontrada"));

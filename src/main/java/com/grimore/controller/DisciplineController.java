@@ -55,7 +55,7 @@ public class DisciplineController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        disciplineService.delete(id);
+        disciplineService.deactivate(id);
         return ResponseEntity.noContent().build();
     }
 }
