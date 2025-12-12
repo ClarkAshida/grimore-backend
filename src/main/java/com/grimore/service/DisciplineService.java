@@ -13,7 +13,6 @@ package com.grimore.service;
                 import org.springframework.transaction.annotation.Transactional;
 
                 import java.util.List;
-                import java.util.UUID;
 
                 @Service
                 @RequiredArgsConstructor
@@ -34,13 +33,13 @@ package com.grimore.service;
                     }
 
                     @Transactional(readOnly = true)
-                    public DisciplineDTO findById(UUID id) {
+                    public DisciplineDTO findById(Integer id) {
                         Discipline discipline = findDisciplineById(id);
                         return mapper.toDTO(discipline);
                     }
 
                     @Transactional(readOnly = true)
-                    public List<DisciplineDTO> findByStudentId(UUID studentId, boolean activeOnly) {
+                    public List<DisciplineDTO> findByStudentId(Integer studentId, boolean activeOnly) {
                         List<Discipline> disciplines = activeOnly
                                 ? disciplineRepository.findByStudentIdAndActiveTrue(studentId)
                                 : disciplineRepository.findByStudentId(studentId);
@@ -48,7 +47,7 @@ package com.grimore.service;
                     }
 
                     @Transactional
-                    public DisciplineDTO update(UUID id, CreateDisciplineDTO dto) {
+                    public DisciplineDTO update(Integer id, CreateDisciplineDTO dto) {
                         Discipline discipline = findDisciplineById(id);
 
                         if (isCodeChanged(discipline, dto.code())) {
@@ -60,31 +59,31 @@ package com.grimore.service;
                     }
 
                     @Transactional
-                    public void deactivate(UUID id) {
+                    public void deactivate(Integer id) {
                         Discipline discipline = findDisciplineById(id);
                         discipline.setActive(false);
                         disciplineRepository.save(discipline);
                     }
 
                     @Transactional
-                    public void delete(UUID id) {
+                    public void delete(Integer id) {
                         if (!disciplineRepository.existsById(id)) {
                             throw new EntityNotFoundException("Disciplina não encontrada");
                         }
                         disciplineRepository.deleteById(id);
                     }
 
-                    private Discipline findDisciplineById(UUID id) {
+                    private Discipline findDisciplineById(Integer id) {
                         return disciplineRepository.findById(id)
                                 .orElseThrow(() -> new EntityNotFoundException("Disciplina não encontrada"));
                     }
 
-                    private Student findStudentById(UUID studentId) {
+                    private Student findStudentById(Integer studentId) {
                         return studentRepository.findById(studentId)
                                 .orElseThrow(() -> new EntityNotFoundException("Estudante não encontrado"));
                     }
 
-                    private void validateDuplicateCode(UUID studentId, String code) {
+                    private void validateDuplicateCode(Integer studentId, String code) {
                         if (code != null && disciplineRepository.existsByStudentIdAndCodeAndActiveTrue(studentId, code)) {
                             throw new IllegalArgumentException("Já existe uma disciplina ativa com este código para o estudante");
                         }

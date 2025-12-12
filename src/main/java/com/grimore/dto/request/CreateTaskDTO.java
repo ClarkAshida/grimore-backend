@@ -3,11 +3,10 @@ package com.grimore.dto.request;
 import com.grimore.enums.TaskType;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 public record CreateTaskDTO(
     @NotNull(message = "ID da disciplina é obrigatório")
-    UUID disciplineId,
+    Integer disciplineId,
 
     @NotBlank(message = "Título é obrigatório")
     @Size(min = 3, max = 200, message = "Título deve ter entre 3 e 200 caracteres")

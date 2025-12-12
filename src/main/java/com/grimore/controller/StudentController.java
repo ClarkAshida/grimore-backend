@@ -24,7 +24,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    public StudentDTO getStudentById(@PathVariable String id) {
+    public StudentDTO getStudentById(@PathVariable Integer id) {
         // Implementation for retrieving a student by ID
         return null;
     }
@@ -37,7 +37,7 @@ public class StudentController {
 
     @DeleteMapping
     @Transactional
-    public void deleteStudent(@RequestParam String id) {
+    public void deleteStudent(@RequestParam Integer id) {
         // Implementation for deleting a student by ID
     }
 }

@@ -4,12 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.grimore.enums.WorkloadHours;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record DisciplineDTO(
-    UUID id,
-    UUID studentId,
+    Integer id,
+    Integer studentId,
     String name,
     String code,
     String scheduleCode,

@@ -7,5 +7,4 @@ public enum WorkloadHours {
     H75,
     H90,
     H120;
-
 }

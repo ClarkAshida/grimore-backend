@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/disciplines")
@@ -27,14 +26,14 @@ public class DisciplineController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<@NonNull DisciplineDTO> findById(@PathVariable UUID id) {
+    public ResponseEntity<@NonNull DisciplineDTO> findById(@PathVariable Integer id) {
         DisciplineDTO discipline = disciplineService.findById(id);
         return ResponseEntity.ok(discipline);
     }
 
     @GetMapping("/student/{studentId}")
     public ResponseEntity<List<@NonNull DisciplineDTO>> findByStudentId(
-            @PathVariable UUID studentId,
+            @PathVariable Integer studentId,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         List<DisciplineDTO> disciplines = disciplineService.findByStudentId(studentId, activeOnly);
         return ResponseEntity.ok(disciplines);
@@ -42,20 +41,20 @@ public class DisciplineController {
 
     @PutMapping("/{id}")
     public ResponseEntity<@NonNull DisciplineDTO> update(
-            @PathVariable UUID id,
+            @PathVariable Integer id,
             @Valid @RequestBody CreateDisciplineDTO dto) {
         DisciplineDTO updated = disciplineService.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<Void> deactivate(@PathVariable UUID id) {
+    public ResponseEntity<Void> deactivate(@PathVariable Integer id) {
         disciplineService.deactivate(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
         disciplineService.delete(id);
         return ResponseEntity.noContent().build();
     }

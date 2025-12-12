@@ -5,10 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface TaskRepository extends JpaRepository<Task, UUID> {
-    List<Task> findByDisciplineId(UUID disciplineId);
-    List<Task> findByDisciplineIdAndCompleted(UUID disciplineId, Boolean completed);
+public interface TaskRepository extends JpaRepository<Task, Integer> {
+    List<Task> findByDisciplineId(Integer disciplineId);
+    List<Task> findByDisciplineIdAndCompleted(Integer disciplineId, Boolean completed);
 }

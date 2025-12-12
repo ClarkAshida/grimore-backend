@@ -1,7 +1,7 @@
 -- Create disciplines table
 CREATE TABLE disciplines (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL,
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER NOT NULL,
     name VARCHAR(255) NOT NULL,
     code VARCHAR(20) NOT NULL,
     schedule_code VARCHAR(20) NOT NULL,

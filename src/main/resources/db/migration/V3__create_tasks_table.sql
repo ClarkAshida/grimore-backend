@@ -1,7 +1,7 @@
 -- Create tasks table
 CREATE TABLE tasks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    discipline_id UUID NOT NULL,
+    id SERIAL PRIMARY KEY,
+    discipline_id INTEGER NOT NULL,
     title VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL CHECK (type IN ('PROVA', 'TRABALHO', 'SEMINARIO', 'LISTA', 'PROJETO', 'OUTRO')),
     due_date TIMESTAMP NOT NULL,
