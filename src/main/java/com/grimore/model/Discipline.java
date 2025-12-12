@@ -31,9 +31,11 @@ public class Discipline {
     @Column(nullable = false)
     private String name;
 
+    @NotBlank(message = "Código da disciplina é obrigatório")
     @Column(length = 20)
     private String code;
 
+    @NotBlank(message = "Código do horário é obrigatório")
     @Column(name = "schedule_code", length = 20)
     private String scheduleCode;
 

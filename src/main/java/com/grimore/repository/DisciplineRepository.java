@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface DisciplineRepository extends JpaRepository<Discipline, UUID> {
     List<Discipline> findByStudentId(UUID studentId);
     List<Discipline> findByStudentIdAndActive(UUID studentId, Boolean active);
+    List<Discipline> findByStudentIdAndActiveTrue(UUID studentId);
+    boolean existsByStudentIdAndCodeAndActiveTrue(UUID studentId, String code);
 }
