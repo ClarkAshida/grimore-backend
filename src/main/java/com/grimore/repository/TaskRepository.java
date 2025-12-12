@@ -10,4 +10,6 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByDisciplineId(Integer disciplineId);
     List<Task> findByDisciplineIdAndCompleted(Integer disciplineId, Boolean completed);
+    List<Task> findByDiscipline_StudentId(Integer studentId);
+    List<Task> findByDiscipline_StudentIdAndCompleted(Integer studentId, Boolean completed);
 }
