@@ -1,11 +1,9 @@
 package com.grimore.dto.response;
 
-import com.grimore.enums.TaskPriority;
-import com.grimore.enums.TaskStatus;
-import com.grimore.enums.TaskType;
-import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.grimore.enums.TaskType;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,11 +12,9 @@ public record TaskDTO(
     UUID disciplineId,
     String disciplineName,
     String title,
-    String description,
-    TaskType taskType,
-    TaskStatus status,
-    TaskPriority priority,
+    TaskType type,
     LocalDateTime dueDate,
-    Double gradeWeight,
-    Double gradeObtained
+    Boolean completed,
+    LocalDateTime createdAt,
+    LocalDateTime updatedAt
 ) {}

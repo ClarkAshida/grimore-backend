@@ -1,8 +1,6 @@
 package com.grimore.dto.request;
 
-import com.grimore.enums.DisciplineNature;
-import com.grimore.enums.DisciplineStatus;
-import com.grimore.enums.TotalHours;
+import com.grimore.enums.WorkloadHours;
 import jakarta.validation.constraints.*;
 
 import java.util.UUID;
@@ -15,24 +13,17 @@ public record CreateDisciplineDTO(
     @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
     String name,
 
-    @Pattern(regexp = "^[A-Z]{3}[0-9]{4}$", message = "Código deve conter 3 letras maiúsculas seguidas de 4 números")
+    @Pattern(regexp = "^[A-Z]{3}[0-9]{4}$", message = "Código deve conter 3 letras maiúsculas seguidas de 4 números (ex: IMD1012)")
     String code,
+
+    @Pattern(regexp = "^[1-7]+[MVN][1-6]+$", message = "Formato de horário inválido. Use o padrão UFRN: dias(1-7) + turno(M/V/N) + slots(1-6) (ex: 246N12)")
+    String scheduleCode,
+
     String location,
 
-    @NotNull(message = "Natureza da disciplina é obrigatória")
-    DisciplineNature nature,
-
-    @NotNull(message = "Semestre é obrigatório")
-    @Min(value = 1, message = "Semestre deve ser maior que 0")
-    Integer semester,
-
-    DisciplineStatus status,
+    @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Cor deve estar no formato hexadecimal (ex: #6366F1)")
+    String colorHex,
 
     @NotNull(message = "Carga horária é obrigatória")
-    @Min(value = 1, message = "Carga horária deve ser maior que 0")
-    TotalHours totalHours,
-
-    @NotNull(message = "Horários das aulas são obrigatórios")
-    @Pattern(regexp = "^[2-7][MNV][1-6]$", message = "Formato de horário inválido. Use o padrão: dia(2-7) + turno(M/N/V) + horário(1-6)")
-    String classSchedules
+    WorkloadHours workloadHours
 ) {}

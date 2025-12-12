@@ -3,6 +3,10 @@ package com.grimore.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -19,7 +23,7 @@ public class Student {
     private UUID id;
 
     @NotBlank(message = "Nome é obrigatório")
-    @Column(nullable = false)
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
     @NotBlank(message = "Email é obrigatório")
@@ -31,16 +35,15 @@ public class Student {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "university_name")
-    @Size(max = 255, message = "Nome da universidade não pode exceder 255 caracteres")
-    private String universityName;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
 
-    @Size(max = 255, message = "Nome do curso não pode exceder 255 caracteres")
-    @Column(name = "course_name")
-    private String courseName;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Min(value = 1, message = "Semestre deve ser maior que 0")
-    @NotNull(message = "Semestre atual é obrigatório")
-    @Column(name = "current_semester", nullable = false)
-    private Integer currentSemester;
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 }

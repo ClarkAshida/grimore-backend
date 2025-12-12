@@ -1,11 +1,13 @@
 package com.grimore.model;
 
-import com.grimore.enums.DisciplineNature;
-import com.grimore.enums.DisciplineStatus;
-import com.grimore.enums.TotalHours;
+import com.grimore.enums.WorkloadHours;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -29,38 +31,38 @@ public class Discipline {
     @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(length = 20)
     private String code;
+
+    @Column(name = "schedule_code", length = 20)
+    private String scheduleCode;
 
     @Column
     private String location;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    @NotNull(message = "Natureza da disciplina é obrigatória")
-    DisciplineNature nature = DisciplineNature.OBLIGATORY;
-
-    @NotNull(message = "Semestre é obrigatório")
-    @Min(value = 1, message = "Semestre deve ser maior que 0")
-    @Column(nullable = false)
-    private Integer semester;
-
-    @Enumerated(EnumType.STRING)
-    @NotNull(message = "Status da disciplina é obrigatório")
-    @Column(nullable = false)
-    private DisciplineStatus status = DisciplineStatus.ACTIVE;
+    @Column(name = "color_hex", length = 7)
+    private String colorHex;
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Carga horária é obrigatória")
-    @Column(name = "total_hours", nullable = false)
-    private TotalHours totalHours = TotalHours.H30;
+    @Column(name = "workload_hours", nullable = false)
+    @Builder.Default
+    private WorkloadHours workloadHours = WorkloadHours.H30;
 
     @Min(value = 0, message = "Contador de faltas não pode ser negativo")
-    @Column(name = "absences_count", nullable = false)
+    @Column(name = "absences_hours", nullable = false)
     @Builder.Default
-    private Integer absencesCount = 0;
+    private Integer absencesHours = 0;
 
-    @NotNull(message = "Horários das aulas são obrigatórios")
-    @Column(name = "class_schedules")
-    private String classSchedules;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 }

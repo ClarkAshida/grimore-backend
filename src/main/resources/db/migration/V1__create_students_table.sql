@@ -4,9 +4,9 @@ CREATE TABLE students (
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    university_name VARCHAR(255),
-    course_name VARCHAR(255),
-    current_semester INTEGER NOT NULL CHECK (current_semester > 0)
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create index for email lookup

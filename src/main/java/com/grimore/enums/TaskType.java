@@ -1,10 +1,10 @@
 package com.grimore.enums;
 
 public enum TaskType {
-    EXAM,
-    HOMEWORK,
-    SEMINAR,
-    STUDY,
-    PROJECT,
-    OTHER
+    PROVA,
+    TRABALHO,
+    SEMINARIO,
+    LISTA,
+    PROJETO,
+    OUTRO
 }
