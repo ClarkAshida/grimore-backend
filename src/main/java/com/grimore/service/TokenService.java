@@ -5,12 +5,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.grimore.model.Student;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Service
 public class TokenService {
@@ -22,7 +21,7 @@ public class TokenService {
     private String issuer;
 
     @Value("${jwt.expiration}")
-    private Long expirationMinutes;
+    private Long expirationSeconds;
 
     public String generateToken(Student student) {
         try {
@@ -32,7 +31,7 @@ public class TokenService {
                     .withSubject(student.getEmail())
                     .withClaim("studentId", student.getId())
                     .withClaim("fullName", student.getFullName())
-                    .withExpiresAt(expires(expirationMinutes.intValue()))
+                    .withExpiresAt(Instant.now().plusSeconds(expirationSeconds))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
             throw new RuntimeException("Erro ao gerar token JWT", exception);
@@ -48,14 +47,11 @@ public class TokenService {
                     .verify(token)
                     .getSubject();
         } catch (JWTVerificationException exception) {
-            throw new RuntimeException("Token JWT inválido ou expirado", exception);
+            return null;
         }
     }
 
-    private Instant expires(int minutes) {
-        return LocalDateTime.now()
-                .plusMinutes(minutes)
-                .atZone(ZoneId.systemDefault())
-                .toInstant();
+    public Long getExpirationSeconds() {
+        return expirationSeconds;
     }
 }
