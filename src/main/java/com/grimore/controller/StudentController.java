@@ -19,7 +19,7 @@ public class StudentController {
 
     private final StudentService studentService;
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<@NonNull StudentDTO> create(@Valid @RequestBody CreateStudentDTO dto) {
         StudentDTO created = studentService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
