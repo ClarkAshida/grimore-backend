@@ -7,6 +7,7 @@ import com.grimore.model.Student;
 import com.grimore.repository.StudentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,14 +18,17 @@ import java.util.List;
 public class StudentService {
     private final StudentRepository studentRepository;
     private final StudentMapper mapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public StudentDTO create(CreateStudentDTO dto) {
         validateDuplicateEmail(dto.email());
 
         Student student = mapper.toEntity(dto);
+        student.setPassword(passwordEncoder.encode(student.getPassword()));
         return mapper.toDTO(studentRepository.save(student));
     }
+
 
     @Transactional(readOnly = true)
     public StudentDTO findById(Integer id) {
