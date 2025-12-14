@@ -3,46 +3,40 @@
 ### 🔐 1. Autenticação e Autorização
 
 #### 1.1 Spring Security + JWT
-- [ ] Criar entidade `User` com relacionamento para `Student`
-- [ ] Implementar `UserRepository`
-- [ ] Criar `UserDetailsService` customizado
-- [ ] Configurar `SecurityFilterChain` com autenticação stateless
-- [ ] Implementar geração e validação de JWT tokens
-    - [ ] Adicionar dependência `jjwt` (Java JWT)
-    - [ ] Criar `JwtTokenProvider` para gerar tokens
-    - [ ] Criar `JwtAuthenticationFilter` para validar tokens
-    - [ ] Configurar tempo de expiração e secret key
+- [X] Configurar `SecurityFilterChain` com autenticação stateless
+- [X] Implementar geração e validação de JWT tokens
+    - [X] Adicionar dependência `jjwt` (Java JWT)
+    - [X] Criar `JwtTokenProvider` para gerar tokens
+    - [X] Criar `JwtAuthenticationFilter` para validar tokens
+    - [X] Configurar tempo de expiração e secret key
 - [ ] Criar endpoints de autenticação
-    - [ ] `POST /api/auth/register` - Cadastro de usuário
-    - [ ] `POST /api/auth/login` - Login e geração de token
-    - [ ] `POST /api/auth/refresh` - Refresh token
-    - [ ] `POST /api/auth/logout` - Invalidar token
+    - [X] `POST /api/auth/register` - Cadastro de usuário
+    - [X] `POST /api/auth/login` - Login e geração de token
+    - [X] `POST /api/auth/refresh` - Refresh token
+    - [X] `POST /api/auth/logout` - Invalidar token
     - [ ] `POST /api/auth/forgot-password` - Iniciar recuperação de senha
     - [ ] `POST /api/auth/reset-password` - Resetar senha com token
-- [ ] Implementar DTOs: `LoginRequest`, `RegisterRequest`, `AuthResponse`
 
 #### 1.2 Controle de Acesso (RBAC)
-- [ ] Criar enum `Role` (STUDENT, ADMIN, PROFESSOR)
-- [ ] Adicionar roles à entidade `User`
+- [X] Criar enum `Role` (STUDENT, ADMIN)
+- [X] Adicionar roles à entidade `Student`
 - [ ] Implementar anotações `@PreAuthorize` nos controllers
 - [ ] Configurar hierarquia de roles
 - [ ] Proteger endpoints administrativos
 
 #### 1.3 OAuth2 / Social Login
 - [ ] Integrar login com Google
-- [ ] Integrar login com GitHub
 - [ ] Configurar OAuth2 Client
 - [ ] Implementar fluxo de registro via social login
 
 #### 1.4 Segurança Adicional
-- [ ] Implementar proteção CSRF para endpoints relevantes
+- [X] Implementar proteção CSRF para endpoints relevantes
 - [ ] Configurar CORS adequadamente
 - [ ] Adicionar rate limiting por IP/usuário
 - [ ] Implementar bloqueio de conta após tentativas falhas
 - [ ] Criar auditoria de login (logs de acesso)
-- [ ] Implementar 2FA (Two-Factor Authentication)
-- [ ] Adicionar password encryption com BCrypt
-- [ ] Criar política de senhas fortes
+- [X] Adicionar password encryption com BCrypt
+- [X] Criar política de senhas fortes
 - [ ] Implementar recuperação de senha via email
 
 ---
