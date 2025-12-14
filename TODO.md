@@ -39,6 +39,27 @@
 - [X] Criar política de senhas fortes
 - [ ] Implementar recuperação de senha via email
 
+#### 1.5 Implementar Exception Handling Global e Custom Exceptions
+- [] Criar `GlobalExceptionHandler` com `@ControllerAdvice`
+- [] Definir exceptions customizadas:
+  - [] `ResourceNotFoundException`
+  - [] `UnauthorizedException`
+  - [] `ForbiddenException`
+  - [] `BadRequestException`
+  - [] `ConflictException`
+  - [] `InternalServerErrorException`
+  - [] `ValidationException`
+  - [] `AuthenticationException`
+  - [] `TokenExpiredException`
+  - [] `RateLimitExceededException`
+  - [] `EmailAlreadyExistsException`
+  - [] `UsernameAlreadyExistsException`
+- [X] Mapear exceptions para responses HTTP adequados
+- [X] Adicionar logging de erros
+- [ ] Criar estrutura de resposta de erro consistente
+- [ ] Implementar testes para exception handling
+- [ ] Documentar erros na API (Swagger)
+
 ---
 
 ### 📄 2. Paginação, Ordenação e Filtros
