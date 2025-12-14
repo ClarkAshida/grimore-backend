@@ -101,6 +101,10 @@ public class TaskService {
                 throw new BadRequestException("You don't have access to this discipline");
             }
 
+            if (!discipline.getActive()) {
+                throw new BadRequestException("Esta disciplina foi desativada");
+            }
+
             List<Task> tasks = completed != null
                     ? taskRepository.findByDisciplineIdAndCompleted(disciplineId, completed)
                     : taskRepository.findByDisciplineId(disciplineId);
@@ -112,6 +116,7 @@ public class TaskService {
             throw new BadRequestException("Failed to fetch tasks");
         }
     }
+
 
     @Transactional
     public TaskDTO updateCurrentStudentTask(Integer id, CreateTaskDTO dto) {

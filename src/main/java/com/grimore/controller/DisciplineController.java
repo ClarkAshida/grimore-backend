@@ -31,7 +31,7 @@ public class DisciplineController {
         return ResponseEntity.ok(discipline);
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<@NonNull DisciplineDTO>> findAll(
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         List<DisciplineDTO> disciplines = disciplineService.findCurrentStudentDisciplines(activeOnly);

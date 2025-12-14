@@ -1,6 +1,7 @@
 package com.grimore.controller;
 
 import com.grimore.dto.request.CreateStudentDTO;
+import com.grimore.dto.response.MessageResponseDTO;
 import com.grimore.dto.response.StudentDTO;
 import com.grimore.service.StudentService;
 import jakarta.validation.Valid;
@@ -36,8 +37,8 @@ public class StudentController {
     }
 
     @DeleteMapping("/profile")
-    public ResponseEntity<Void> deactivateProfile() {
+    public ResponseEntity<MessageResponseDTO> deactivateProfile() {
         studentService.deactivateCurrentProfile();
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new MessageResponseDTO("Conta desativada com sucesso"));
     }
 }
