@@ -4,9 +4,6 @@ import com.grimore.enums.WorkloadHours;
 import jakarta.validation.constraints.*;
 
 public record CreateDisciplineDTO(
-    @NotNull(message = "ID do estudante é obrigatório")
-    Integer studentId,
-
     @NotBlank(message = "Nome da disciplina é obrigatório")
     @Size(min = 3, max = 100, message = "Nome deve ter entre 3 e 100 caracteres")
     String name,

@@ -9,6 +9,7 @@ import com.grimore.exception.validation.InvalidPasswordException;
 import com.grimore.mapper.StudentMapper;
 import com.grimore.model.Student;
 import com.grimore.repository.StudentRepository;
+import com.grimore.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,6 +48,63 @@ public class StudentService {
     }
 
     @Transactional(readOnly = true)
+    public StudentDTO getCurrentProfile() {
+        try {
+            Student student = SecurityUtils.getCurrentStudent();
+            log.info("Profile retrieved for student: {}", student.getEmail());
+            return mapper.toDTO(student);
+        } catch (Exception ex) {
+            log.error("Error retrieving current profile", ex);
+            throw new BadRequestException("Failed to retrieve profile");
+        }
+    }
+
+    @Transactional
+    public StudentDTO updateCurrentProfile(CreateStudentDTO dto) {
+        validateCreateDTO(dto);
+        Student student = SecurityUtils.getCurrentStudent();
+
+        if (isEmailChanged(student, dto.email())) {
+            validateDuplicateEmailForUpdate(dto.email(), student.getId());
+        }
+
+        try {
+            mapper.updateEntity(dto, student);
+            Student updated = studentRepository.save(student);
+
+            log.info("Profile updated successfully: {}", updated.getEmail());
+            return mapper.toDTO(updated);
+        } catch (EmailAlreadyExistsException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error updating profile", ex);
+            throw new BadRequestException("Failed to update profile");
+        }
+    }
+
+    @Transactional
+    public void deactivateCurrentProfile() {
+        try {
+            Student student = SecurityUtils.getCurrentStudent();
+
+            if (!student.getActive()) {
+                throw new BadRequestException("Account is already inactive");
+            }
+
+            student.setActive(false);
+            studentRepository.save(student);
+
+            log.info("Profile deactivated successfully: {}", student.getEmail());
+        } catch (BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error deactivating profile", ex);
+            throw new BadRequestException("Failed to deactivate profile");
+        }
+    }
+
+    // Métodos para Admin
+    @Transactional(readOnly = true)
     public StudentDTO findById(Integer id) {
         if (id == null || id <= 0) {
             throw new BadRequestException("Invalid student ID");
@@ -66,33 +124,6 @@ public class StudentService {
         } catch (Exception ex) {
             log.error("Error fetching students", ex);
             throw new BadRequestException("Failed to fetch students");
-        }
-    }
-
-    @Transactional
-    public StudentDTO update(Integer id, CreateStudentDTO dto) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid student ID");
-        }
-
-        validateCreateDTO(dto);
-        Student student = findStudentById(id);
-
-        if (isEmailChanged(student, dto.email())) {
-            validateDuplicateEmailForUpdate(dto.email(), id);
-        }
-
-        try {
-            mapper.updateEntity(dto, student);
-            Student updated = studentRepository.save(student);
-
-            log.info("Student updated successfully: {}", updated.getEmail());
-            return mapper.toDTO(updated);
-        } catch (EmailAlreadyExistsException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Error updating student: {}", id, ex);
-            throw new BadRequestException("Failed to update student");
         }
     }
 

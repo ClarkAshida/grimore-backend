@@ -38,4 +38,7 @@ public class AuthenticationController {
         authenticationService.logout(dto.refreshToken());
         return ResponseEntity.noContent().build();
     }
+
+    // Forget Password
+    // Reset Password
 }

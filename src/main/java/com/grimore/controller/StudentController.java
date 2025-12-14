@@ -10,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/students")
 @RequiredArgsConstructor
@@ -20,35 +18,26 @@ public class StudentController {
     private final StudentService studentService;
 
     @PostMapping("/register")
-    public ResponseEntity<@NonNull StudentDTO> create(@Valid @RequestBody CreateStudentDTO dto) {
+    public ResponseEntity<@NonNull StudentDTO> register(@Valid @RequestBody CreateStudentDTO dto) {
         StudentDTO created = studentService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<@NonNull StudentDTO> findById(@PathVariable Integer id) {
-        StudentDTO student = studentService.findById(id);
-        return ResponseEntity.ok(student);
+    @GetMapping("/profile")
+    public ResponseEntity<@NonNull StudentDTO> getProfile() {
+        StudentDTO profile = studentService.getCurrentProfile();
+        return ResponseEntity.ok(profile);
     }
 
-    @GetMapping
-    public ResponseEntity<List<@NonNull StudentDTO>> findAll(
-            @RequestParam(defaultValue = "true") boolean activeOnly) {
-        List<StudentDTO> students = studentService.findAll(activeOnly);
-        return ResponseEntity.ok(students);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<@NonNull StudentDTO> update(
-            @PathVariable Integer id,
-            @Valid @RequestBody CreateStudentDTO dto) {
-        StudentDTO updated = studentService.update(id, dto);
+    @PutMapping("/profile")
+    public ResponseEntity<@NonNull StudentDTO> updateProfile(@Valid @RequestBody CreateStudentDTO dto) {
+        StudentDTO updated = studentService.updateCurrentProfile(dto);
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        studentService.deactivate(id);
+    @DeleteMapping("/profile")
+    public ResponseEntity<Void> deactivateProfile() {
+        studentService.deactivateCurrentProfile();
         return ResponseEntity.noContent().build();
     }
 }

@@ -27,29 +27,22 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public ResponseEntity<@NonNull TaskDTO> findById(@PathVariable Integer id) {
-        TaskDTO task = taskService.findById(id);
+        TaskDTO task = taskService.findCurrentStudentTaskById(id);
         return ResponseEntity.ok(task);
     }
 
     @GetMapping
-    public ResponseEntity<List<@NonNull TaskDTO>> findAll() {
-        List<TaskDTO> tasks = taskService.findAll();
+    public ResponseEntity<List<@NonNull TaskDTO>> findAll(
+            @RequestParam(required = false) Boolean completed) {
+        List<TaskDTO> tasks = taskService.findCurrentStudentTasks(completed);
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/discipline/{disciplineId}")
-    public ResponseEntity<List<@NonNull TaskDTO>> findByDisciplineId(
+    public ResponseEntity<List<@NonNull TaskDTO>> findByDiscipline(
             @PathVariable Integer disciplineId,
             @RequestParam(required = false) Boolean completed) {
-        List<TaskDTO> tasks = taskService.findByDisciplineId(disciplineId, completed);
-        return ResponseEntity.ok(tasks);
-    }
-
-    @GetMapping("/student/{studentId}")
-    public ResponseEntity<List<@NonNull TaskDTO>> findByStudentId(
-            @PathVariable Integer studentId,
-            @RequestParam(required = false) Boolean completed) {
-        List<TaskDTO> tasks = taskService.findByStudentId(studentId, completed);
+        List<TaskDTO> tasks = taskService.findCurrentStudentTasksByDiscipline(disciplineId, completed);
         return ResponseEntity.ok(tasks);
     }
 
@@ -57,19 +50,19 @@ public class TaskController {
     public ResponseEntity<@NonNull TaskDTO> update(
             @PathVariable Integer id,
             @Valid @RequestBody CreateTaskDTO dto) {
-        TaskDTO updated = taskService.update(id, dto);
+        TaskDTO updated = taskService.updateCurrentStudentTask(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @PatchMapping("/{id}/toggle-completed")
     public ResponseEntity<@NonNull TaskDTO> toggleCompleted(@PathVariable Integer id) {
-        TaskDTO updated = taskService.toggleCompleted(id);
+        TaskDTO updated = taskService.toggleCurrentStudentTaskCompleted(id);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        taskService.delete(id);
+        taskService.deleteCurrentStudentTask(id);
         return ResponseEntity.noContent().build();
     }
 }
