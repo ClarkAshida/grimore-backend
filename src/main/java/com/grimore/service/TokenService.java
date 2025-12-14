@@ -31,12 +31,14 @@ public class TokenService {
                     .withSubject(student.getEmail())
                     .withClaim("studentId", student.getId())
                     .withClaim("fullName", student.getFullName())
+                    .withClaim("role", student.getRole().getAuthority())
                     .withExpiresAt(Instant.now().plusSeconds(expirationSeconds))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
             throw new RuntimeException("Erro ao gerar token JWT", exception);
         }
     }
+
 
     public String validateTokenAndGetSubject(String token) {
         try {
