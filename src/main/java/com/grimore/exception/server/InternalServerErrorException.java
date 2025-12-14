@@ -6,7 +6,7 @@ public class InternalServerErrorException extends RuntimeException {
     }
 
     public InternalServerErrorException() {
-        super("Internal server error occurred");
+        super("Erro interno do servidor");
     }
 
     public InternalServerErrorException(String message, Throwable cause) {

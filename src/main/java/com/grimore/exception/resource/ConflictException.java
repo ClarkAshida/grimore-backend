@@ -6,7 +6,7 @@ public class ConflictException extends RuntimeException {
     }
 
     public ConflictException() {
-        super("Resource conflict");
+        super("Conflito de recurso");
     }
 }
 

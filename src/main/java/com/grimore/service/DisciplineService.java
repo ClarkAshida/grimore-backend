@@ -1,87 +1,163 @@
 package com.grimore.service;
 
-                import com.grimore.dto.request.CreateDisciplineDTO;
-                import com.grimore.dto.response.DisciplineDTO;
-                import com.grimore.mapper.DisciplineMapper;
-                import com.grimore.model.Discipline;
-                import com.grimore.model.Student;
-                import com.grimore.repository.DisciplineRepository;
-                import com.grimore.repository.StudentRepository;
-                import jakarta.persistence.EntityNotFoundException;
-                import lombok.RequiredArgsConstructor;
-                import org.springframework.stereotype.Service;
-                import org.springframework.transaction.annotation.Transactional;
+import com.grimore.dto.request.CreateDisciplineDTO;
+import com.grimore.dto.response.DisciplineDTO;
+import com.grimore.exception.resource.ConflictException;
+import com.grimore.exception.resource.ResourceNotFoundException;
+import com.grimore.exception.validation.BadRequestException;
+import com.grimore.mapper.DisciplineMapper;
+import com.grimore.model.Discipline;
+import com.grimore.model.Student;
+import com.grimore.repository.DisciplineRepository;
+import com.grimore.repository.StudentRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-                import java.util.List;
+import java.util.List;
 
-                @Service
-                @RequiredArgsConstructor
-                public class DisciplineService {
-                    private final DisciplineRepository disciplineRepository;
-                    private final StudentRepository studentRepository;
-                    private final DisciplineMapper mapper;
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class DisciplineService {
+    private final DisciplineRepository disciplineRepository;
+    private final StudentRepository studentRepository;
+    private final DisciplineMapper mapper;
 
-                    @Transactional
-                    public DisciplineDTO create(CreateDisciplineDTO dto) {
-                        Student student = findStudentById(dto.studentId());
-                        validateDuplicateCode(dto.studentId(), dto.code());
+    @Transactional
+    public DisciplineDTO create(CreateDisciplineDTO dto) {
+        validateCreateDTO(dto);
+        Student student = findStudentById(dto.studentId());
+        validateDuplicateCode(dto.studentId(), dto.code());
 
-                        Discipline discipline = mapper.toEntity(dto);
-                        discipline.setStudent(student);
+        try {
+            Discipline discipline = mapper.toEntity(dto);
+            discipline.setStudent(student);
+            Discipline saved = disciplineRepository.save(discipline);
 
-                        return mapper.toDTO(disciplineRepository.save(discipline));
-                    }
+            log.info("Discipline created successfully for student: {}", dto.studentId());
+            return mapper.toDTO(saved);
+        } catch (ConflictException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error creating discipline", ex);
+            throw new BadRequestException("Failed to create discipline");
+        }
+    }
 
-                    @Transactional(readOnly = true)
-                    public DisciplineDTO findById(Integer id) {
-                        Discipline discipline = findDisciplineById(id);
-                        return mapper.toDTO(discipline);
-                    }
+    @Transactional(readOnly = true)
+    public DisciplineDTO findById(Integer id) {
+        if (id == null || id <= 0) {
+            throw new BadRequestException("Invalid discipline ID");
+        }
 
-                    @Transactional(readOnly = true)
-                    public List<DisciplineDTO> findByStudentId(Integer studentId, boolean activeOnly) {
-                        List<Discipline> disciplines = activeOnly
-                                ? disciplineRepository.findByStudentIdAndActiveTrue(studentId)
-                                : disciplineRepository.findByStudentId(studentId);
-                        return mapper.toDTO(disciplines);
-                    }
+        Discipline discipline = findDisciplineById(id);
+        return mapper.toDTO(discipline);
+    }
 
-                    @Transactional
-                    public DisciplineDTO update(Integer id, CreateDisciplineDTO dto) {
-                        Discipline discipline = findDisciplineById(id);
+    @Transactional(readOnly = true)
+    public List<DisciplineDTO> findByStudentId(Integer studentId, boolean activeOnly) {
+        if (studentId == null || studentId <= 0) {
+            throw new BadRequestException("Invalid student ID");
+        }
 
-                        if (isCodeChanged(discipline, dto.code())) {
-                            validateDuplicateCode(dto.studentId(), dto.code());
-                        }
+        if (!studentRepository.existsById(studentId)) {
+            throw new ResourceNotFoundException("Student", "id", studentId);
+        }
 
-                        mapper.updateEntity(dto, discipline);
-                        return mapper.toDTO(disciplineRepository.save(discipline));
-                    }
+        try {
+            List<Discipline> disciplines = activeOnly
+                    ? disciplineRepository.findByStudentIdAndActiveTrue(studentId)
+                    : disciplineRepository.findByStudentId(studentId);
+            return mapper.toDTO(disciplines);
+        } catch (Exception ex) {
+            log.error("Error fetching disciplines for student: {}", studentId, ex);
+            throw new BadRequestException("Failed to fetch disciplines");
+        }
+    }
 
-                    @Transactional
-                    public void deactivate(Integer id) {
-                        Discipline discipline = findDisciplineById(id);
-                        discipline.setActive(false);
-                        disciplineRepository.save(discipline);
-                    }
+    @Transactional
+    public DisciplineDTO update(Integer id, CreateDisciplineDTO dto) {
+        if (id == null || id <= 0) {
+            throw new BadRequestException("Invalid discipline ID");
+        }
 
-                    private Discipline findDisciplineById(Integer id) {
-                        return disciplineRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("Disciplina não encontrada"));
-                    }
+        validateCreateDTO(dto);
+        Discipline discipline = findDisciplineById(id);
 
-                    private Student findStudentById(Integer studentId) {
-                        return studentRepository.findById(studentId)
-                                .orElseThrow(() -> new EntityNotFoundException("Estudante não encontrado"));
-                    }
+        if (isCodeChanged(discipline, dto.code())) {
+            validateDuplicateCode(dto.studentId(), dto.code());
+        }
 
-                    private void validateDuplicateCode(Integer studentId, String code) {
-                        if (code != null && disciplineRepository.existsByStudentIdAndCodeAndActiveTrue(studentId, code)) {
-                            throw new IllegalArgumentException("Já existe uma disciplina ativa com este código para o estudante");
-                        }
-                    }
+        try {
+            mapper.updateEntity(dto, discipline);
+            Discipline updated = disciplineRepository.save(discipline);
 
-                    private boolean isCodeChanged(Discipline discipline, String newCode) {
-                        return newCode != null && !newCode.equals(discipline.getCode());
-                    }
-                }
+            log.info("Discipline updated successfully: {}", id);
+            return mapper.toDTO(updated);
+        } catch (ConflictException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error updating discipline: {}", id, ex);
+            throw new BadRequestException("Failed to update discipline");
+        }
+    }
+
+    @Transactional
+    public void deactivate(Integer id) {
+        if (id == null || id <= 0) {
+            throw new BadRequestException("Invalid discipline ID");
+        }
+
+        try {
+            Discipline discipline = findDisciplineById(id);
+
+            if (!discipline.getActive()) {
+                throw new BadRequestException("Discipline is already inactive");
+            }
+
+            discipline.setActive(false);
+            disciplineRepository.save(discipline);
+
+            log.info("Discipline deactivated successfully: {}", id);
+        } catch (ResourceNotFoundException | BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error deactivating discipline: {}", id, ex);
+            throw new BadRequestException("Failed to deactivate discipline");
+        }
+    }
+
+    private Discipline findDisciplineById(Integer id) {
+        return disciplineRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Discipline", "id", id));
+    }
+
+    private Student findStudentById(Integer studentId) {
+        return studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
+    }
+
+    private void validateDuplicateCode(Integer studentId, String code) {
+        if (code != null && disciplineRepository.existsByStudentIdAndCodeAndActiveTrue(studentId, code)) {
+            throw new ConflictException("Active discipline with code '" + code + "' already exists for this student");
+        }
+    }
+
+    private boolean isCodeChanged(Discipline discipline, String newCode) {
+        return newCode != null && !newCode.equals(discipline.getCode());
+    }
+
+    private void validateCreateDTO(CreateDisciplineDTO dto) {
+        if (dto == null) {
+            throw new BadRequestException("Discipline data is required");
+        }
+        if (dto.studentId() == null || dto.studentId() <= 0) {
+            throw new BadRequestException("Valid student ID is required");
+        }
+        if (dto.name() == null || dto.name().isBlank()) {
+            throw new BadRequestException("Discipline name is required");
+        }
+    }
+}

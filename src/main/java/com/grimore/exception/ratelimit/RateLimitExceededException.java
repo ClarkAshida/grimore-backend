@@ -6,7 +6,7 @@ public class RateLimitExceededException extends RuntimeException {
     }
 
     public RateLimitExceededException() {
-        super("Rate limit exceeded. Please try again later");
+        super("Limite de uso excedido. Por favor tente novamente mais tarde.");
     }
 }
 

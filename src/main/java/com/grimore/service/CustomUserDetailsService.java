@@ -1,5 +1,6 @@
 package com.grimore.service;
 
+import com.grimore.exception.resource.ResourceNotFoundException;
 import com.grimore.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return studentRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
     }
 }

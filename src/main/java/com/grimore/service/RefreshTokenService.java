@@ -1,5 +1,7 @@
 package com.grimore.service;
 
+import com.grimore.exception.auth.TokenExpiredException;
+import com.grimore.exception.resource.ResourceNotFoundException;
 import com.grimore.model.RefreshToken;
 import com.grimore.model.Student;
 import com.grimore.repository.RefreshTokenRepository;
@@ -36,7 +38,7 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.isExpired()) {
             refreshTokenRepository.delete(token);
-            throw new RuntimeException("Refresh token expirado. Por favor, faça login novamente");
+            throw new TokenExpiredException("Refresh token expirado. Por favor, faça login novamente");
         }
         return token;
     }
@@ -44,7 +46,7 @@ public class RefreshTokenService {
     @Transactional(readOnly = true)
     public RefreshToken findByToken(String token) {
         return refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Refresh token não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token", "token", token));
     }
 
     @Transactional

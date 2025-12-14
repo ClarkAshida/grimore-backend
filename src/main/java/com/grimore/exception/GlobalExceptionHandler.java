@@ -1,16 +1,14 @@
 package com.grimore.exception;
 
 import com.grimore.dto.response.ErrorResponseDTO;
-import com.grimore.exception.auth.ForbiddenException;
-import com.grimore.exception.auth.TokenExpiredException;
-import com.grimore.exception.auth.UnauthorizedException;
+import com.grimore.exception.auth.*;
 import com.grimore.exception.ratelimit.RateLimitExceededException;
 import com.grimore.exception.resource.ConflictException;
 import com.grimore.exception.resource.ResourceNotFoundException;
 import com.grimore.exception.server.InternalServerErrorException;
 import com.grimore.exception.user.EmailAlreadyExistsException;
-import com.grimore.exception.user.UsernameAlreadyExistsException;
 import com.grimore.exception.validation.BadRequestException;
+import com.grimore.exception.validation.InvalidPasswordException;
 import com.grimore.exception.validation.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -146,6 +144,54 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDTO);
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidCredentialsException(
+            InvalidCredentialsException ex, HttpServletRequest request) {
+        log.error("InvalidCredentialsException: {}", ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponseDTO);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidTokenException(
+            InvalidTokenException ex, HttpServletRequest request) {
+        log.error("InvalidTokenException: {}", ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error("Invalid Token")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponseDTO);
+    }
+
+    @ExceptionHandler(InvalidPasswordException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidPasswordException(
+            InvalidPasswordException ex, HttpServletRequest request) {
+        log.error("InvalidPasswordException: {}", ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Invalid Password")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDTO);
+    }
+
     @ExceptionHandler(com.grimore.exception.auth.AuthenticationException.class)
     public ResponseEntity<ErrorResponseDTO> handleAuthenticationException(
             com.grimore.exception.auth.AuthenticationException ex, HttpServletRequest request) {
@@ -210,22 +256,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponseDTO);
     }
 
-    @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponseDTO> handleUsernameAlreadyExistsException(
-            UsernameAlreadyExistsException ex, HttpServletRequest request) {
-        log.error("UsernameAlreadyExistsException: {}", ex.getMessage());
-
-        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error(HttpStatus.CONFLICT.getReasonPhrase())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponseDTO);
-    }
-
     // Handle Spring Security AuthenticationException
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponseDTO> handleSpringAuthenticationException(
@@ -236,7 +266,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
-                .message("Authentication failed: " + ex.getMessage())
+                .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();
 
@@ -253,7 +283,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.FORBIDDEN.value())
                 .error(HttpStatus.FORBIDDEN.getReasonPhrase())
-                .message("Access denied: " + ex.getMessage())
+                .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();
 
@@ -277,7 +307,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Validation Error")
-                .message("Invalid input data")
+                .message("Dados Inválidos")
                 .path(request.getRequestURI())
                 .validationErrors(errors)
                 .build();
@@ -315,7 +345,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Malformed JSON")
-                .message("Invalid JSON format in request body")
+                .message("O JSON fornecido é inválido ou malformado")
                 .path(request.getRequestURI())
                 .build();
 
@@ -332,7 +362,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("An unexpected error occurred")
+                .message("Um erro inesperado ocorreu no servidor")
                 .path(request.getRequestURI())
                 .build();
 

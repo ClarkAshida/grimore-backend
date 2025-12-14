@@ -4,8 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.grimore.exception.server.InternalServerErrorException;
 import com.grimore.model.Student;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +35,7 @@ public class TokenService {
                     .withExpiresAt(Instant.now().plusSeconds(expirationSeconds))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
-            throw new RuntimeException("Erro ao gerar token JWT", exception);
+            throw new InternalServerErrorException("Error generating JWT token", exception);
         }
     }
 

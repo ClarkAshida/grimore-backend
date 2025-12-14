@@ -6,7 +6,7 @@ public class ForbiddenException extends RuntimeException {
     }
 
     public ForbiddenException() {
-        super("You don't have permission to access this resource");
+        super("Você não tem permissão para acessar este recurso");
     }
 }
 
