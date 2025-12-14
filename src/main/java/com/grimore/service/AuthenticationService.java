@@ -37,6 +37,7 @@ public class AuthenticationService {
                 refreshToken.getToken(),
                 student.getFullName(),
                 student.getEmail(),
+                student.getRole(),
                 tokenService.getExpirationSeconds()
         );
     }
