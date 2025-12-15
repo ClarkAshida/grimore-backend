@@ -2,6 +2,7 @@ package com.grimore.service;
 
 import com.grimore.dto.request.CreateDisciplineDTO;
 import com.grimore.dto.response.DisciplineDTO;
+import com.grimore.dto.response.DisciplineSummaryDTO;
 import com.grimore.exception.resource.ConflictException;
 import com.grimore.exception.resource.ResourceNotFoundException;
 import com.grimore.exception.validation.BadRequestException;
@@ -65,7 +66,7 @@ public class DisciplineService {
     }
 
     @Transactional(readOnly = true)
-    public List<DisciplineDTO> findCurrentStudentDisciplines(boolean activeOnly) {
+    public List<DisciplineSummaryDTO> findCurrentStudentDisciplines(boolean activeOnly) {
         try {
             Integer currentStudentId = SecurityUtils.getCurrentStudentId();
 
@@ -74,7 +75,7 @@ public class DisciplineService {
                     : disciplineRepository.findByStudentId(currentStudentId);
 
             log.info("Retrieved {} disciplines for current student", disciplines.size());
-            return mapper.toDTO(disciplines);
+            return mapper.toSummaryDTO(disciplines);
         } catch (Exception ex) {
             log.error("Error fetching current student disciplines", ex);
             throw new BadRequestException("Falha ao buscar disciplinas");

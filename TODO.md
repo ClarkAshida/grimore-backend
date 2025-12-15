@@ -2,9 +2,6 @@
 
 criar regra de negócio para validar disciplinas que tem horários conflitantes
 
-DTO de get all deve ser reduzido enquanto o get by id é detalhado
-
-quero que no get all tasks, se uma disciplina está active == false, as tasks sumam do get all, pegue apenas tasks com discipline.active == true
 
 ### 🔐 1. Autenticação e Autorização
 

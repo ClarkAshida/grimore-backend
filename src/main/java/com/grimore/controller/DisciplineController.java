@@ -2,6 +2,7 @@ package com.grimore.controller;
 
 import com.grimore.dto.request.CreateDisciplineDTO;
 import com.grimore.dto.response.DisciplineDTO;
+import com.grimore.dto.response.DisciplineSummaryDTO;
 import com.grimore.service.DisciplineService;
 import jakarta.validation.Valid;
 import lombok.NonNull;
@@ -32,9 +33,9 @@ public class DisciplineController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<@NonNull DisciplineDTO>> findAll(
+    public ResponseEntity<List<@NonNull DisciplineSummaryDTO>> findAll(
             @RequestParam(defaultValue = "true") boolean activeOnly) {
-        List<DisciplineDTO> disciplines = disciplineService.findCurrentStudentDisciplines(activeOnly);
+        List<DisciplineSummaryDTO> disciplines = disciplineService.findCurrentStudentDisciplines(activeOnly);
         return ResponseEntity.ok(disciplines);
     }
 

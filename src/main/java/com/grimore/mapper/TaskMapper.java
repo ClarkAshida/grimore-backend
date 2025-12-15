@@ -2,6 +2,7 @@ package com.grimore.mapper;
 
 import com.grimore.dto.request.CreateTaskDTO;
 import com.grimore.dto.response.TaskDTO;
+import com.grimore.dto.response.TaskSummaryDTO;
 import com.grimore.model.Task;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,6 +18,12 @@ public interface TaskMapper {
     TaskDTO toDTO(Task task);
 
     List<TaskDTO> toDTO(List<Task> tasks);
+
+    @Mapping(source = "discipline.id", target = "disciplineId")
+    @Mapping(source = "discipline.name", target = "disciplineName")
+    TaskSummaryDTO toSummaryDTO(Task task);
+
+    List<TaskSummaryDTO> toSummaryDTO(List<Task> tasks);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "discipline", ignore = true)

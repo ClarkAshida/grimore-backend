@@ -12,4 +12,8 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByDisciplineIdAndCompleted(Integer disciplineId, Boolean completed);
     List<Task> findByDiscipline_StudentId(Integer studentId);
     List<Task> findByDiscipline_StudentIdAndCompleted(Integer studentId, Boolean completed);
+
+    // Métodos para buscar apenas tasks de disciplinas ativas
+    List<Task> findByDiscipline_StudentIdAndDiscipline_ActiveTrue(Integer studentId);
+    List<Task> findByDiscipline_StudentIdAndCompletedAndDiscipline_ActiveTrue(Integer studentId, Boolean completed);
 }

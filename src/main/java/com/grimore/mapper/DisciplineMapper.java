@@ -2,6 +2,7 @@ package com.grimore.mapper;
 
 import com.grimore.dto.request.CreateDisciplineDTO;
 import com.grimore.dto.response.DisciplineDTO;
+import com.grimore.dto.response.DisciplineSummaryDTO;
 import com.grimore.model.Discipline;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,6 +17,10 @@ public interface DisciplineMapper {
     DisciplineDTO toDTO(Discipline discipline);
 
     List<DisciplineDTO> toDTO(List<Discipline> disciplines);
+
+    DisciplineSummaryDTO toSummaryDTO(Discipline discipline);
+
+    List<DisciplineSummaryDTO> toSummaryDTO(List<Discipline> disciplines);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "student", ignore = true)

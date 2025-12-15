@@ -2,6 +2,7 @@ package com.grimore.service;
 
 import com.grimore.dto.request.CreateTaskDTO;
 import com.grimore.dto.response.TaskDTO;
+import com.grimore.dto.response.TaskSummaryDTO;
 import com.grimore.exception.resource.ResourceNotFoundException;
 import com.grimore.exception.validation.BadRequestException;
 import com.grimore.mapper.TaskMapper;
@@ -71,16 +72,16 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskDTO> findCurrentStudentTasks(Boolean completed) {
+    public List<TaskSummaryDTO> findCurrentStudentTasks(Boolean completed) {
         try {
             Integer currentStudentId = SecurityUtils.getCurrentStudentId();
 
             List<Task> tasks = completed != null
-                    ? taskRepository.findByDiscipline_StudentIdAndCompleted(currentStudentId, completed)
-                    : taskRepository.findByDiscipline_StudentId(currentStudentId);
+                    ? taskRepository.findByDiscipline_StudentIdAndCompletedAndDiscipline_ActiveTrue(currentStudentId, completed)
+                    : taskRepository.findByDiscipline_StudentIdAndDiscipline_ActiveTrue(currentStudentId);
 
-            log.info("Retrieved {} tasks for current student", tasks.size());
-            return mapper.toDTO(tasks);
+            log.info("Retrieved {} tasks for current student from active disciplines", tasks.size());
+            return mapper.toSummaryDTO(tasks);
         } catch (Exception ex) {
             log.error("Error fetching current student tasks", ex);
             throw new BadRequestException("Falha ao buscar tarefas");
@@ -88,7 +89,7 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskDTO> findCurrentStudentTasksByDiscipline(Integer disciplineId, Boolean completed) {
+    public List<TaskSummaryDTO> findCurrentStudentTasksByDiscipline(Integer disciplineId, Boolean completed) {
         if (disciplineId == null || disciplineId <= 0) {
             throw new BadRequestException("ID de disciplina inválido");
         }
@@ -110,7 +111,7 @@ public class TaskService {
                     : taskRepository.findByDisciplineId(disciplineId);
 
             log.info("Retrieved {} tasks for discipline: {}", tasks.size(), disciplineId);
-            return mapper.toDTO(tasks);
+            return mapper.toSummaryDTO(tasks);
         } catch (Exception ex) {
             log.error("Error fetching tasks for discipline: {}", disciplineId, ex);
             throw new BadRequestException("Falha ao buscar tarefas");

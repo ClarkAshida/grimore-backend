@@ -2,6 +2,7 @@ package com.grimore.controller;
 
 import com.grimore.dto.request.CreateTaskDTO;
 import com.grimore.dto.response.TaskDTO;
+import com.grimore.dto.response.TaskSummaryDTO;
 import com.grimore.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.NonNull;
@@ -32,17 +33,17 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<@NonNull TaskDTO>> findAll(
+    public ResponseEntity<List<@NonNull TaskSummaryDTO>> findAll(
             @RequestParam(required = false) Boolean completed) {
-        List<TaskDTO> tasks = taskService.findCurrentStudentTasks(completed);
+        List<TaskSummaryDTO> tasks = taskService.findCurrentStudentTasks(completed);
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/discipline/{disciplineId}")
-    public ResponseEntity<List<@NonNull TaskDTO>> findByDiscipline(
+    public ResponseEntity<List<@NonNull TaskSummaryDTO>> findByDiscipline(
             @PathVariable Integer disciplineId,
             @RequestParam(required = false) Boolean completed) {
-        List<TaskDTO> tasks = taskService.findCurrentStudentTasksByDiscipline(disciplineId, completed);
+        List<TaskSummaryDTO> tasks = taskService.findCurrentStudentTasksByDiscipline(disciplineId, completed);
         return ResponseEntity.ok(tasks);
     }
 
