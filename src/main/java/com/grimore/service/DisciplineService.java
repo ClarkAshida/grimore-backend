@@ -44,21 +44,21 @@ public class DisciplineService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error creating discipline", ex);
-            throw new BadRequestException("Failed to create discipline");
+            throw new BadRequestException("Falha ao criar disciplina");
         }
     }
 
     @Transactional(readOnly = true)
     public DisciplineDTO findCurrentStudentDisciplineById(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid discipline ID");
+            throw new BadRequestException("ID de disciplina inválido");
         }
 
         Integer currentStudentId = SecurityUtils.getCurrentStudentId();
         Discipline discipline = findDisciplineById(id);
 
         if (!discipline.getStudent().getId().equals(currentStudentId)) {
-            throw new BadRequestException("You don't have access to this discipline");
+            throw new BadRequestException("Você não tem acesso a esta disciplina");
         }
 
         return mapper.toDTO(discipline);
@@ -77,14 +77,14 @@ public class DisciplineService {
             return mapper.toDTO(disciplines);
         } catch (Exception ex) {
             log.error("Error fetching current student disciplines", ex);
-            throw new BadRequestException("Failed to fetch disciplines");
+            throw new BadRequestException("Falha ao buscar disciplinas");
         }
     }
 
     @Transactional
     public DisciplineDTO updateCurrentStudentDiscipline(Integer id, CreateDisciplineDTO dto) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid discipline ID");
+            throw new BadRequestException("ID de disciplina inválido");
         }
 
         validateCreateDTO(dto);
@@ -92,7 +92,7 @@ public class DisciplineService {
         Discipline discipline = findDisciplineById(id);
 
         if (!discipline.getStudent().getId().equals(currentStudentId)) {
-            throw new BadRequestException("You don't have access to this discipline");
+            throw new BadRequestException("Você não tem acesso a esta disciplina");
         }
 
         if (isCodeChanged(discipline, dto.code())) {
@@ -109,14 +109,14 @@ public class DisciplineService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error updating discipline: {}", id, ex);
-            throw new BadRequestException("Failed to update discipline");
+            throw new BadRequestException("Falha ao atualizar disciplina");
         }
     }
 
     @Transactional
     public void deactivateCurrentStudentDiscipline(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid discipline ID");
+            throw new BadRequestException("ID de disciplina inválido");
         }
 
         try {
@@ -124,11 +124,11 @@ public class DisciplineService {
             Discipline discipline = findDisciplineById(id);
 
             if (!discipline.getStudent().getId().equals(currentStudentId)) {
-                throw new BadRequestException("You don't have access to this discipline");
+                throw new BadRequestException("Você não tem acesso a esta disciplina");
             }
 
             if (!discipline.getActive()) {
-                throw new BadRequestException("Discipline is already inactive");
+                throw new BadRequestException("Disciplina já está inativa");
             }
 
             discipline.setActive(false);
@@ -139,7 +139,7 @@ public class DisciplineService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error deactivating discipline: {}", id, ex);
-            throw new BadRequestException("Failed to deactivate discipline");
+            throw new BadRequestException("Falha ao desativar disciplina");
         }
     }
 
@@ -147,7 +147,7 @@ public class DisciplineService {
     @Transactional(readOnly = true)
     public DisciplineDTO findById(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid discipline ID");
+            throw new BadRequestException("ID de disciplina inválido");
         }
 
         Discipline discipline = findDisciplineById(id);
@@ -157,11 +157,11 @@ public class DisciplineService {
     @Transactional(readOnly = true)
     public List<DisciplineDTO> findByStudentId(Integer studentId, boolean activeOnly) {
         if (studentId == null || studentId <= 0) {
-            throw new BadRequestException("Invalid student ID");
+            throw new BadRequestException("ID de estudante inválido");
         }
 
         if (!studentRepository.existsById(studentId)) {
-            throw new ResourceNotFoundException("Student", "id", studentId);
+            throw new ResourceNotFoundException("Estudante", "id", studentId);
         }
 
         try {
@@ -171,21 +171,21 @@ public class DisciplineService {
             return mapper.toDTO(disciplines);
         } catch (Exception ex) {
             log.error("Error fetching disciplines for student: {}", studentId, ex);
-            throw new BadRequestException("Failed to fetch disciplines");
+            throw new BadRequestException("Falha ao buscar disciplinas");
         }
     }
 
     @Transactional
     public void deactivate(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid discipline ID");
+            throw new BadRequestException("ID de disciplina inválido");
         }
 
         try {
             Discipline discipline = findDisciplineById(id);
 
             if (!discipline.getActive()) {
-                throw new BadRequestException("Discipline is already inactive");
+                throw new BadRequestException("Disciplina já está inativa");
             }
 
             discipline.setActive(false);
@@ -196,23 +196,23 @@ public class DisciplineService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error deactivating discipline: {}", id, ex);
-            throw new BadRequestException("Failed to deactivate discipline");
+            throw new BadRequestException("Falha ao desativar disciplina");
         }
     }
 
     private Discipline findDisciplineById(Integer id) {
         return disciplineRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Discipline", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Disciplina", "id", id));
     }
 
     private Student findStudentById(Integer studentId) {
         return studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", studentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante", "id", studentId));
     }
 
     private void validateDuplicateCode(Integer studentId, String code) {
         if (code != null && disciplineRepository.existsByStudentIdAndCodeAndActiveTrue(studentId, code)) {
-            throw new ConflictException("Active discipline with code '" + code + "' already exists for this student");
+            throw new ConflictException("Disciplina ativa com código '" + code + "' já existe para este estudante");
         }
     }
 
@@ -222,10 +222,10 @@ public class DisciplineService {
 
     private void validateCreateDTO(CreateDisciplineDTO dto) {
         if (dto == null) {
-            throw new BadRequestException("Discipline data is required");
+            throw new BadRequestException("Dados da disciplina são obrigatórios");
         }
         if (dto.name() == null || dto.name().isBlank()) {
-            throw new BadRequestException("Discipline name is required");
+            throw new BadRequestException("Nome da disciplina é obrigatório");
         }
     }
 }

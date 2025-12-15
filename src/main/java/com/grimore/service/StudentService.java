@@ -43,7 +43,7 @@ public class StudentService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error creating student", ex);
-            throw new BadRequestException("Failed to create student");
+            throw new BadRequestException("Falha ao criar estudante");
         }
     }
 
@@ -55,7 +55,7 @@ public class StudentService {
             return mapper.toDTO(student);
         } catch (Exception ex) {
             log.error("Error retrieving current profile", ex);
-            throw new BadRequestException("Failed to retrieve profile");
+            throw new BadRequestException("Falha ao buscar perfil");
         }
     }
 
@@ -78,7 +78,7 @@ public class StudentService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error updating profile", ex);
-            throw new BadRequestException("Failed to update profile");
+            throw new BadRequestException("Falha ao atualizar perfil");
         }
     }
 
@@ -88,7 +88,7 @@ public class StudentService {
             Student student = SecurityUtils.getCurrentStudent();
 
             if (!student.getActive()) {
-                throw new BadRequestException("Account is already inactive");
+                throw new BadRequestException("Conta já está inativa");
             }
 
             student.setActive(false);
@@ -99,7 +99,7 @@ public class StudentService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error deactivating profile", ex);
-            throw new BadRequestException("Failed to deactivate profile");
+            throw new BadRequestException("Falha ao desativar perfil");
         }
     }
 
@@ -107,7 +107,7 @@ public class StudentService {
     @Transactional(readOnly = true)
     public StudentDTO findById(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid student ID");
+            throw new BadRequestException("ID de estudante inválido");
         }
 
         Student student = findStudentById(id);
@@ -123,21 +123,21 @@ public class StudentService {
             return mapper.toDTO(students);
         } catch (Exception ex) {
             log.error("Error fetching students", ex);
-            throw new BadRequestException("Failed to fetch students");
+            throw new BadRequestException("Falha ao buscar estudantes");
         }
     }
 
     @Transactional
     public void deactivate(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid student ID");
+            throw new BadRequestException("ID de estudante inválido");
         }
 
         try {
             Student student = findStudentById(id);
 
             if (!student.getActive()) {
-                throw new BadRequestException("Student is already inactive");
+                throw new BadRequestException("Estudante já está inativo");
             }
 
             student.setActive(false);
@@ -148,19 +148,19 @@ public class StudentService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error deactivating student: {}", id, ex);
-            throw new BadRequestException("Failed to deactivate student");
+            throw new BadRequestException("Falha ao desativar estudante");
         }
     }
 
     @Transactional
     public void delete(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid student ID");
+            throw new BadRequestException("ID de estudante inválido");
         }
 
         try {
             if (!studentRepository.existsById(id)) {
-                throw new ResourceNotFoundException("Student", "id", id);
+                throw new ResourceNotFoundException("Estudante", "id", id);
             }
 
             studentRepository.deleteById(id);
@@ -169,13 +169,13 @@ public class StudentService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error deleting student: {}", id, ex);
-            throw new BadRequestException("Failed to delete student");
+            throw new BadRequestException("Falha ao deletar estudante");
         }
     }
 
     private Student findStudentById(Integer id) {
         return studentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Student", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante", "id", id));
     }
 
     private void validateDuplicateEmail(String email) {
@@ -196,22 +196,22 @@ public class StudentService {
 
     private void validateCreateDTO(CreateStudentDTO dto) {
         if (dto == null) {
-            throw new BadRequestException("Student data is required");
+            throw new BadRequestException("Dados do estudante são obrigatórios");
         }
         if (dto.email() == null || dto.email().isBlank()) {
-            throw new BadRequestException("Email is required");
+            throw new BadRequestException("Email é obrigatório");
         }
         if (dto.fullName() == null || dto.fullName().isBlank()) {
-            throw new BadRequestException("Full name is required");
+            throw new BadRequestException("Nome completo é obrigatório");
         }
     }
 
     private void validatePassword(String password) {
         if (password == null || password.isBlank()) {
-            throw new InvalidPasswordException("Password is required");
+            throw new InvalidPasswordException("Senha é obrigatória");
         }
         if (password.length() < 8) {
-            throw new InvalidPasswordException("Password must be at least 8 characters long");
+            throw new InvalidPasswordException("Senha deve ter no mínimo 8 caracteres");
         }
     }
 }

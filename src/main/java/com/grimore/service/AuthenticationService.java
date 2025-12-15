@@ -71,7 +71,7 @@ public class AuthenticationService {
     @Transactional
     public TokenResponseDTO refreshToken(RefreshTokenRequestDTO dto) {
         if (dto.refreshToken() == null || dto.refreshToken().isBlank()) {
-            throw new BadRequestException("Refresh token is required");
+            throw new BadRequestException("Refresh token é obrigatório");
         }
 
         try {
@@ -79,7 +79,7 @@ public class AuthenticationService {
 
             if (refreshToken.isRevoked()) {
                 log.warn("Attempt to use revoked refresh token");
-                throw new TokenExpiredException("Refresh token has been revoked");
+                throw new TokenExpiredException("Refresh token foi revogado");
             }
 
             refreshToken = refreshTokenService.verifyExpiration(refreshToken);
@@ -103,14 +103,14 @@ public class AuthenticationService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error refreshing token", ex);
-            throw new BadRequestException("Failed to refresh token");
+            throw new BadRequestException("Falha ao renovar token");
         }
     }
 
     @Transactional
     public void logout(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new BadRequestException("Refresh token is required");
+            throw new BadRequestException("Refresh token é obrigatório");
         }
 
         try {
@@ -118,7 +118,7 @@ public class AuthenticationService {
             log.info("User logged out successfully");
         } catch (Exception ex) {
             log.error("Error during logout", ex);
-            throw new BadRequestException("Failed to logout");
+            throw new BadRequestException("Falha ao fazer logout");
         }
     }
 }

@@ -46,7 +46,7 @@ public class RefreshTokenService {
     @Transactional(readOnly = true)
     public RefreshToken findByToken(String token) {
         return refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Refresh token", "token", token));
+                .orElseThrow(() -> new ResourceNotFoundException("Token de atualização", "token", token));
     }
 
     @Transactional

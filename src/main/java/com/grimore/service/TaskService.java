@@ -32,11 +32,11 @@ public class TaskService {
         Discipline discipline = findDisciplineById(dto.disciplineId());
 
         if (!discipline.getStudent().getId().equals(currentStudentId)) {
-            throw new BadRequestException("You don't have access to this discipline");
+            throw new BadRequestException("Você não tem acesso a esta disciplina");
         }
 
         if (!discipline.getActive()) {
-            throw new BadRequestException("Cannot create task for inactive discipline");
+            throw new BadRequestException("Não é possível criar tarefa para disciplina inativa");
         }
 
         try {
@@ -50,21 +50,21 @@ public class TaskService {
             return mapper.toDTO(saved);
         } catch (Exception ex) {
             log.error("Error creating task", ex);
-            throw new BadRequestException("Failed to create task");
+            throw new BadRequestException("Falha ao criar tarefa");
         }
     }
 
     @Transactional(readOnly = true)
     public TaskDTO findCurrentStudentTaskById(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid task ID");
+            throw new BadRequestException("ID de tarefa inválido");
         }
 
         Integer currentStudentId = SecurityUtils.getCurrentStudentId();
         Task task = findTaskById(id);
 
         if (!task.getDiscipline().getStudent().getId().equals(currentStudentId)) {
-            throw new BadRequestException("You don't have access to this task");
+            throw new BadRequestException("Você não tem acesso a esta tarefa");
         }
 
         return mapper.toDTO(task);
@@ -83,14 +83,14 @@ public class TaskService {
             return mapper.toDTO(tasks);
         } catch (Exception ex) {
             log.error("Error fetching current student tasks", ex);
-            throw new BadRequestException("Failed to fetch tasks");
+            throw new BadRequestException("Falha ao buscar tarefas");
         }
     }
 
     @Transactional(readOnly = true)
     public List<TaskDTO> findCurrentStudentTasksByDiscipline(Integer disciplineId, Boolean completed) {
         if (disciplineId == null || disciplineId <= 0) {
-            throw new BadRequestException("Invalid discipline ID");
+            throw new BadRequestException("ID de disciplina inválido");
         }
 
         try {
@@ -98,7 +98,7 @@ public class TaskService {
             Discipline discipline = findDisciplineById(disciplineId);
 
             if (!discipline.getStudent().getId().equals(currentStudentId)) {
-                throw new BadRequestException("You don't have access to this discipline");
+                throw new BadRequestException("Você não tem acesso a esta disciplina");
             }
 
             if (!discipline.getActive()) {
@@ -113,7 +113,7 @@ public class TaskService {
             return mapper.toDTO(tasks);
         } catch (Exception ex) {
             log.error("Error fetching tasks for discipline: {}", disciplineId, ex);
-            throw new BadRequestException("Failed to fetch tasks");
+            throw new BadRequestException("Falha ao buscar tarefas");
         }
     }
 
@@ -121,7 +121,7 @@ public class TaskService {
     @Transactional
     public TaskDTO updateCurrentStudentTask(Integer id, CreateTaskDTO dto) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid task ID");
+            throw new BadRequestException("ID de tarefa inválido");
         }
 
         validateCreateDTO(dto);
@@ -129,13 +129,13 @@ public class TaskService {
         Task task = findTaskById(id);
 
         if (!task.getDiscipline().getStudent().getId().equals(currentStudentId)) {
-            throw new BadRequestException("You don't have access to this task");
+            throw new BadRequestException("Você não tem acesso a esta tarefa");
         }
 
         Discipline discipline = findDisciplineById(dto.disciplineId());
 
         if (!discipline.getStudent().getId().equals(currentStudentId)) {
-            throw new BadRequestException("You don't have access to this discipline");
+            throw new BadRequestException("Você não tem acesso a esta disciplina");
         }
 
         try {
@@ -148,14 +148,14 @@ public class TaskService {
             return mapper.toDTO(updated);
         } catch (Exception ex) {
             log.error("Error updating task: {}", id, ex);
-            throw new BadRequestException("Failed to update task");
+            throw new BadRequestException("Falha ao atualizar tarefa");
         }
     }
 
     @Transactional
     public TaskDTO toggleCurrentStudentTaskCompleted(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid task ID");
+            throw new BadRequestException("ID de tarefa inválido");
         }
 
         try {
@@ -163,7 +163,7 @@ public class TaskService {
             Task task = findTaskById(id);
 
             if (!task.getDiscipline().getStudent().getId().equals(currentStudentId)) {
-                throw new BadRequestException("You don't have access to this task");
+                throw new BadRequestException("Você não tem acesso a esta tarefa");
             }
 
             task.setCompleted(!task.getCompleted());
@@ -176,14 +176,14 @@ public class TaskService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error toggling task completion: {}", id, ex);
-            throw new BadRequestException("Failed to update task");
+            throw new BadRequestException("Falha ao atualizar tarefa");
         }
     }
 
     @Transactional
     public void deleteCurrentStudentTask(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid task ID");
+            throw new BadRequestException("ID de tarefa inválido");
         }
 
         try {
@@ -191,7 +191,7 @@ public class TaskService {
             Task task = findTaskById(id);
 
             if (!task.getDiscipline().getStudent().getId().equals(currentStudentId)) {
-                throw new BadRequestException("You don't have access to this task");
+                throw new BadRequestException("Você não tem acesso a esta tarefa");
             }
 
             taskRepository.deleteById(id);
@@ -200,7 +200,7 @@ public class TaskService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error deleting task: {}", id, ex);
-            throw new BadRequestException("Failed to delete task");
+            throw new BadRequestException("Falha ao deletar tarefa");
         }
     }
 
@@ -208,7 +208,7 @@ public class TaskService {
     @Transactional(readOnly = true)
     public TaskDTO findById(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid task ID");
+            throw new BadRequestException("ID de tarefa inválido");
         }
 
         Task task = findTaskById(id);
@@ -218,11 +218,11 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<TaskDTO> findByDisciplineId(Integer disciplineId, Boolean completed) {
         if (disciplineId == null || disciplineId <= 0) {
-            throw new BadRequestException("Invalid discipline ID");
+            throw new BadRequestException("ID de disciplina inválido");
         }
 
         if (!disciplineRepository.existsById(disciplineId)) {
-            throw new ResourceNotFoundException("Discipline", "id", disciplineId);
+            throw new ResourceNotFoundException("Disciplina", "id", disciplineId);
         }
 
         try {
@@ -233,14 +233,14 @@ public class TaskService {
             return mapper.toDTO(tasks);
         } catch (Exception ex) {
             log.error("Error fetching tasks for discipline: {}", disciplineId, ex);
-            throw new BadRequestException("Failed to fetch tasks");
+            throw new BadRequestException("Falha ao buscar tarefas");
         }
     }
 
     @Transactional(readOnly = true)
     public List<TaskDTO> findByStudentId(Integer studentId, Boolean completed) {
         if (studentId == null || studentId <= 0) {
-            throw new BadRequestException("Invalid student ID");
+            throw new BadRequestException("ID de estudante inválido");
         }
 
         try {
@@ -251,7 +251,7 @@ public class TaskService {
             return mapper.toDTO(tasks);
         } catch (Exception ex) {
             log.error("Error fetching tasks for student: {}", studentId, ex);
-            throw new BadRequestException("Failed to fetch tasks");
+            throw new BadRequestException("Falha ao buscar tarefas");
         }
     }
 
@@ -262,19 +262,19 @@ public class TaskService {
             return mapper.toDTO(tasks);
         } catch (Exception ex) {
             log.error("Error fetching all tasks", ex);
-            throw new BadRequestException("Failed to fetch tasks");
+            throw new BadRequestException("Falha ao buscar tarefas");
         }
     }
 
     @Transactional
     public void delete(Integer id) {
         if (id == null || id <= 0) {
-            throw new BadRequestException("Invalid task ID");
+            throw new BadRequestException("ID de tarefa inválido");
         }
 
         try {
             if (!taskRepository.existsById(id)) {
-                throw new ResourceNotFoundException("Task", "id", id);
+                throw new ResourceNotFoundException("Tarefa", "id", id);
             }
 
             taskRepository.deleteById(id);
@@ -283,29 +283,29 @@ public class TaskService {
             throw ex;
         } catch (Exception ex) {
             log.error("Error deleting task: {}", id, ex);
-            throw new BadRequestException("Failed to delete task");
+            throw new BadRequestException("Falha ao deletar tarefa");
         }
     }
 
     private Task findTaskById(Integer id) {
         return taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa", "id", id));
     }
 
     private Discipline findDisciplineById(Integer id) {
         return disciplineRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Discipline", "id", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Disciplina", "id", id));
     }
 
     private void validateCreateDTO(CreateTaskDTO dto) {
         if (dto == null) {
-            throw new BadRequestException("Task data is required");
+            throw new BadRequestException("Dados da tarefa são obrigatórios");
         }
         if (dto.disciplineId() == null || dto.disciplineId() <= 0) {
-            throw new BadRequestException("Valid discipline ID is required");
+            throw new BadRequestException("ID de disciplina válido é obrigatório");
         }
         if (dto.title() == null || dto.title().isBlank()) {
-            throw new BadRequestException("Task title is required");
+            throw new BadRequestException("Título da tarefa é obrigatório");
         }
     }
 }

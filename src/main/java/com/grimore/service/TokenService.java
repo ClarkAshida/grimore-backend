@@ -35,7 +35,7 @@ public class TokenService {
                     .withExpiresAt(Instant.now().plusSeconds(expirationSeconds))
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
-            throw new InternalServerErrorException("Error generating JWT token", exception);
+            throw new InternalServerErrorException("Erro ao gerar token JWT", exception);
         }
     }
 
