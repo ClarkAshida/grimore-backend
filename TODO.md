@@ -20,9 +20,9 @@
 #### 1.2 Controle de Acesso (RBAC)
 - [X] Criar enum `Role` (STUDENT, ADMIN)
 - [X] Adicionar roles à entidade `Student`
-- [ ] Implementar anotações `@PreAuthorize` nos controllers
-- [ ] Configurar hierarquia de roles
-- [ ] Proteger endpoints administrativos
+- [X] Implementar anotações `@PreAuthorize` nos controllers
+- [X] Configurar hierarquia de roles
+- [X] Proteger endpoints administrativos
 
 #### 1.3 OAuth2 / Social Login
 - [ ] Integrar login com Google
