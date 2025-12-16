@@ -21,13 +21,14 @@ Grimore é um backend em Spring Boot voltado à gestão acadêmica via API REST 
 
 ```
 src/main/java/com/grimore/
-├── controller/       # Endpoints REST (Student, Discipline, Task)
+├── controller/       # Endpoints REST
 ├── dto/             # Data Transfer Objects (Request/Response)
-├── enums/           # Enumerações (TaskType, WorkloadHours)
+├── enums/           # Enumerações 
 ├── exception/       # Exception Handlers globais
 ├── mapper/          # MapStruct Mappers
 ├── model/           # Entidades JPA
 ├── repository/      # Repositories Spring Data
 ├── security/        # Configurações de segurança
-└── service/         # Lógica de negócio
+├── service/         # Lógica de negócio
+└── util/         # Utilitários de negócio
 ```

@@ -12,4 +12,6 @@ public interface DisciplineRepository extends JpaRepository<Discipline, Integer>
     List<Discipline> findByStudentIdAndActive(Integer studentId, Boolean active);
     List<Discipline> findByStudentIdAndActiveTrue(Integer studentId);
     boolean existsByStudentIdAndCodeAndActiveTrue(Integer studentId, String code);
+    List<Discipline> findByStudentIdAndActiveTrueAndIdNot(Integer studentId, Integer disciplineId);
+
 }

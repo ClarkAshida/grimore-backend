@@ -1,8 +1,5 @@
 ## 🚀 TODO - Roadmap para Produção
 
-criar regra de negócio para validar disciplinas que tem horários conflitantes
-
-
 ### 🔐 1. Autenticação e Autorização
 
 #### 1.1 Spring Security + JWT

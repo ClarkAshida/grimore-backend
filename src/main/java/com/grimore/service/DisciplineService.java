@@ -12,6 +12,7 @@ import com.grimore.model.Student;
 import com.grimore.repository.DisciplineRepository;
 import com.grimore.repository.StudentRepository;
 import com.grimore.security.SecurityUtils;
+import com.grimore.util.ScheduleCodeParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class DisciplineService {
         Integer currentStudentId = SecurityUtils.getCurrentStudentId();
         Student student = findStudentById(currentStudentId);
         validateDuplicateCode(currentStudentId, dto.code());
+        verifyScheduleConflict(currentStudentId, dto.scheduleCode(), null);
 
         try {
             Discipline discipline = mapper.toEntity(dto);
@@ -100,6 +102,8 @@ public class DisciplineService {
             validateDuplicateCode(currentStudentId, dto.code());
         }
 
+        verifyScheduleConflict(currentStudentId, dto.scheduleCode(), id);
+
         try {
             mapper.updateEntity(dto, discipline);
             Discipline updated = disciplineRepository.save(discipline);
@@ -113,6 +117,7 @@ public class DisciplineService {
             throw new BadRequestException("Falha ao atualizar disciplina");
         }
     }
+
 
     @Transactional
     public void deactivateCurrentStudentDiscipline(Integer id) {
@@ -144,7 +149,29 @@ public class DisciplineService {
         }
     }
 
+    private void verifyScheduleConflict(Integer studentId, String scheduleCode, Integer excludeDisciplineId) {
+        if (scheduleCode == null || scheduleCode.isBlank()) {
+            return;
+        }
+
+        List<Discipline> activeDisciplines = excludeDisciplineId == null
+                ? disciplineRepository.findByStudentIdAndActiveTrue(studentId)
+                : disciplineRepository.findByStudentIdAndActiveTrueAndIdNot(studentId, excludeDisciplineId);
+
+        for (Discipline discipline : activeDisciplines) {
+            if (ScheduleCodeParser.hasConflict(scheduleCode, discipline.getScheduleCode())) {
+                throw new ConflictException(
+                        String.format("Conflito de horário detectado com a disciplina '%s' (código: %s)",
+                                discipline.getName(),
+                                discipline.getScheduleCode())
+                );
+            }
+        }
+    }
+
+
     // Métodos para Admin
+
     @Transactional(readOnly = true)
     public DisciplineDTO findById(Integer id) {
         if (id == null || id <= 0) {
