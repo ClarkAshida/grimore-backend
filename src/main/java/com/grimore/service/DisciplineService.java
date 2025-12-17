@@ -15,6 +15,8 @@ import com.grimore.security.SecurityUtils;
 import com.grimore.util.ScheduleCodeParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,16 +70,16 @@ public class DisciplineService {
     }
 
     @Transactional(readOnly = true)
-    public List<DisciplineSummaryDTO> findCurrentStudentDisciplines(boolean activeOnly) {
+    public Page<DisciplineSummaryDTO> findCurrentStudentDisciplines(boolean activeOnly, Pageable pageable) {
         try {
             Integer currentStudentId = SecurityUtils.getCurrentStudentId();
 
-            List<Discipline> disciplines = activeOnly
-                    ? disciplineRepository.findByStudentIdAndActiveTrue(currentStudentId)
-                    : disciplineRepository.findByStudentId(currentStudentId);
+            Page<Discipline> disciplines = activeOnly
+                    ? disciplineRepository.findByStudentIdAndActiveTrue(currentStudentId, pageable)
+                    : disciplineRepository.findByStudentId(currentStudentId, pageable);
 
-            log.info("Retrieved {} disciplines for current student", disciplines.size());
-            return mapper.toSummaryDTO(disciplines);
+            log.info("Retrieved {} disciplines for current student", disciplines.getTotalElements());
+            return disciplines.map(mapper::toSummaryDTO);
         } catch (Exception ex) {
             log.error("Error fetching current student disciplines", ex);
             throw new BadRequestException("Falha ao buscar disciplinas");
@@ -257,3 +259,4 @@ public class DisciplineService {
         }
     }
 }
+

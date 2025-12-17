@@ -7,6 +7,8 @@ import com.grimore.service.DisciplineService;
 import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,9 +35,10 @@ public class DisciplineController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<@NonNull DisciplineSummaryDTO>> findAll(
-            @RequestParam(defaultValue = "true") boolean activeOnly) {
-        List<DisciplineSummaryDTO> disciplines = disciplineService.findCurrentStudentDisciplines(activeOnly);
+    public ResponseEntity<Page<@NonNull DisciplineSummaryDTO>> findAll(
+            @RequestParam(defaultValue = "true") boolean activeOnly,
+            Pageable pageable) {
+        Page<DisciplineSummaryDTO> disciplines = disciplineService.findCurrentStudentDisciplines(activeOnly, pageable);
         return ResponseEntity.ok(disciplines);
     }
 
