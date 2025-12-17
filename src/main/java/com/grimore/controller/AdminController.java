@@ -8,6 +8,8 @@ import com.grimore.service.StudentService;
 import com.grimore.service.TaskService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +29,10 @@ public class AdminController {
     // ===== STUDENT ENDPOINTS =====
 
     @GetMapping("/students")
-    public ResponseEntity<List<@NonNull StudentDTO>> getAllStudents(
-            @RequestParam(defaultValue = "true") boolean activeOnly) {
-        List<StudentDTO> students = studentService.findAll(activeOnly);
+    public ResponseEntity<Page<@NonNull StudentDTO>> getAllStudents(
+            @RequestParam(defaultValue = "true") boolean activeOnly,
+            Pageable pageable) {
+        Page<StudentDTO> students = studentService.findAll(activeOnly, pageable);
         return ResponseEntity.ok(students);
     }
 
@@ -82,13 +85,10 @@ public class AdminController {
     // ===== TASK ENDPOINTS =====
 
     @GetMapping("/tasks")
-    public ResponseEntity<List<@NonNull TaskDTO>> getAllTasks(
-            @RequestParam(required = false) Boolean completed) {
-        List<TaskDTO> tasks = completed != null
-            ? taskService.findAll().stream()
-                .filter(t -> t.completed().equals(completed))
-                .toList()
-            : taskService.findAll();
+    public ResponseEntity<Page<@NonNull TaskDTO>> getAllTasks(
+            @RequestParam(required = false) Boolean completed,
+            Pageable pageable) {
+        Page<TaskDTO> tasks = taskService.findAll(completed, pageable);
         return ResponseEntity.ok(tasks);
     }
 
@@ -99,18 +99,20 @@ public class AdminController {
     }
 
     @GetMapping("/students/{studentId}/tasks")
-    public ResponseEntity<List<@NonNull TaskDTO>> getStudentTasks(
+    public ResponseEntity<Page<@NonNull TaskDTO>> getStudentTasks(
             @PathVariable Integer studentId,
-            @RequestParam(required = false) Boolean completed) {
-        List<TaskDTO> tasks = taskService.findByStudentId(studentId, completed);
+            @RequestParam(required = false) Boolean completed,
+            Pageable pageable) {
+        Page<TaskDTO> tasks = taskService.findByStudentId(studentId, completed, pageable);
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/disciplines/{disciplineId}/tasks")
-    public ResponseEntity<List<@NonNull TaskDTO>> getDisciplineTasks(
+    public ResponseEntity<Page<@NonNull TaskDTO>> getDisciplineTasks(
             @PathVariable Integer disciplineId,
-            @RequestParam(required = false) Boolean completed) {
-        List<TaskDTO> tasks = taskService.findByDisciplineId(disciplineId, completed);
+            @RequestParam(required = false) Boolean completed,
+            Pageable pageable) {
+        Page<TaskDTO> tasks = taskService.findByDisciplineId(disciplineId, completed, pageable);
         return ResponseEntity.ok(tasks);
     }
 

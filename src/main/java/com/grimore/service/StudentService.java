@@ -10,8 +10,11 @@ import com.grimore.mapper.StudentMapper;
 import com.grimore.model.Student;
 import com.grimore.repository.StudentRepository;
 import com.grimore.security.SecurityUtils;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,6 +124,20 @@ public class StudentService {
                     ? studentRepository.findByActiveTrue()
                     : studentRepository.findAll();
             return mapper.toDTO(students);
+        } catch (Exception ex) {
+            log.error("Error fetching students", ex);
+            throw new BadRequestException("Falha ao buscar estudantes");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<StudentDTO> findAll(boolean activeOnly, @NotNull Pageable pageable) {
+        try {
+            Page<Student> students = activeOnly
+                    ? studentRepository.findByActiveTrue(pageable)
+                    : studentRepository.findAll(pageable);
+            log.info("Retrieved {} students", students.getTotalElements());
+            return students.map(mapper::toDTO);
         } catch (Exception ex) {
             log.error("Error fetching students", ex);
             throw new BadRequestException("Falha ao buscar estudantes");

@@ -11,8 +11,11 @@ import com.grimore.model.Task;
 import com.grimore.repository.DisciplineRepository;
 import com.grimore.repository.TaskRepository;
 import com.grimore.security.SecurityUtils;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,16 +75,16 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskSummaryDTO> findCurrentStudentTasks(Boolean completed) {
+    public Page<TaskSummaryDTO> findCurrentStudentTasks(Boolean completed, @NotNull Pageable pageable) {
         try {
             Integer currentStudentId = SecurityUtils.getCurrentStudentId();
 
-            List<Task> tasks = completed != null
-                    ? taskRepository.findByDiscipline_StudentIdAndCompletedAndDiscipline_ActiveTrue(currentStudentId, completed)
-                    : taskRepository.findByDiscipline_StudentIdAndDiscipline_ActiveTrue(currentStudentId);
+            Page<Task> tasks = completed != null
+                    ? taskRepository.findByDiscipline_StudentIdAndCompletedAndDiscipline_ActiveTrue(currentStudentId, completed, pageable)
+                    : taskRepository.findByDiscipline_StudentIdAndDiscipline_ActiveTrue(currentStudentId, pageable);
 
-            log.info("Retrieved {} tasks for current student from active disciplines", tasks.size());
-            return mapper.toSummaryDTO(tasks);
+            log.info("Retrieved {} tasks for current student from active disciplines", tasks.getTotalElements());
+            return tasks.map(mapper::toSummaryDTO);
         } catch (Exception ex) {
             log.error("Error fetching current student tasks", ex);
             throw new BadRequestException("Falha ao buscar tarefas");
@@ -89,7 +92,7 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskSummaryDTO> findCurrentStudentTasksByDiscipline(Integer disciplineId, Boolean completed) {
+    public Page<TaskSummaryDTO> findCurrentStudentTasksByDiscipline(Integer disciplineId, Boolean completed, @NotNull Pageable pageable) {
         if (disciplineId == null || disciplineId <= 0) {
             throw new BadRequestException("ID de disciplina inválido");
         }
@@ -106,12 +109,12 @@ public class TaskService {
                 throw new BadRequestException("Esta disciplina foi desativada");
             }
 
-            List<Task> tasks = completed != null
-                    ? taskRepository.findByDisciplineIdAndCompleted(disciplineId, completed)
-                    : taskRepository.findByDisciplineId(disciplineId);
+            Page<Task> tasks = completed != null
+                    ? taskRepository.findByDisciplineIdAndCompleted(disciplineId, completed, pageable)
+                    : taskRepository.findByDisciplineId(disciplineId, pageable);
 
-            log.info("Retrieved {} tasks for discipline: {}", tasks.size(), disciplineId);
-            return mapper.toSummaryDTO(tasks);
+            log.info("Retrieved {} tasks for discipline: {}", tasks.getTotalElements(), disciplineId);
+            return tasks.map(mapper::toSummaryDTO);
         } catch (Exception ex) {
             log.error("Error fetching tasks for discipline: {}", disciplineId, ex);
             throw new BadRequestException("Falha ao buscar tarefas");
@@ -217,7 +220,7 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskDTO> findByDisciplineId(Integer disciplineId, Boolean completed) {
+    public Page<TaskDTO> findByDisciplineId(Integer disciplineId, Boolean completed, @NotNull Pageable pageable) {
         if (disciplineId == null || disciplineId <= 0) {
             throw new BadRequestException("ID de disciplina inválido");
         }
@@ -227,11 +230,11 @@ public class TaskService {
         }
 
         try {
-            List<Task> tasks = completed != null
-                    ? taskRepository.findByDisciplineIdAndCompleted(disciplineId, completed)
-                    : taskRepository.findByDisciplineId(disciplineId);
+            Page<Task> tasks = completed != null
+                    ? taskRepository.findByDisciplineIdAndCompleted(disciplineId, completed, pageable)
+                    : taskRepository.findByDisciplineId(disciplineId, pageable);
 
-            return mapper.toDTO(tasks);
+            return tasks.map(mapper::toDTO);
         } catch (Exception ex) {
             log.error("Error fetching tasks for discipline: {}", disciplineId, ex);
             throw new BadRequestException("Falha ao buscar tarefas");
@@ -239,17 +242,17 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskDTO> findByStudentId(Integer studentId, Boolean completed) {
+    public Page<TaskDTO> findByStudentId(Integer studentId, Boolean completed, @NotNull Pageable pageable) {
         if (studentId == null || studentId <= 0) {
             throw new BadRequestException("ID de estudante inválido");
         }
 
         try {
-            List<Task> tasks = completed != null
-                    ? taskRepository.findByDiscipline_StudentIdAndCompleted(studentId, completed)
-                    : taskRepository.findByDiscipline_StudentId(studentId);
+            Page<Task> tasks = completed != null
+                    ? taskRepository.findByDiscipline_StudentIdAndCompleted(studentId, completed, pageable)
+                    : taskRepository.findByDiscipline_StudentId(studentId, pageable);
 
-            return mapper.toDTO(tasks);
+            return tasks.map(mapper::toDTO);
         } catch (Exception ex) {
             log.error("Error fetching tasks for student: {}", studentId, ex);
             throw new BadRequestException("Falha ao buscar tarefas");
@@ -257,10 +260,12 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
-    public List<TaskDTO> findAll() {
+    public Page<TaskDTO> findAll(Boolean completed, @NotNull Pageable pageable) {
         try {
-            List<Task> tasks = taskRepository.findAll();
-            return mapper.toDTO(tasks);
+            Page<Task> tasks = completed != null
+                    ? taskRepository.findByCompleted(completed, pageable)
+                    : taskRepository.findAll(pageable);
+            return tasks.map(mapper::toDTO);
         } catch (Exception ex) {
             log.error("Error fetching all tasks", ex);
             throw new BadRequestException("Falha ao buscar tarefas");
