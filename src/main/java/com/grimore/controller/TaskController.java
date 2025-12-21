@@ -7,11 +7,11 @@ import com.grimore.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/tasks")
@@ -33,17 +33,19 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<@NonNull TaskSummaryDTO>> findAll(
-            @RequestParam(required = false) Boolean completed) {
-        List<TaskSummaryDTO> tasks = taskService.findCurrentStudentTasks(completed);
+    public ResponseEntity<Page<@NonNull TaskSummaryDTO>> findAll(
+            @RequestParam(required = false) Boolean completed,
+            Pageable pageable) {
+        Page<TaskSummaryDTO> tasks = taskService.findCurrentStudentTasks(completed, pageable);
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/discipline/{disciplineId}")
-    public ResponseEntity<List<@NonNull TaskSummaryDTO>> findByDiscipline(
+    public ResponseEntity<Page<@NonNull TaskSummaryDTO>> findByDiscipline(
             @PathVariable Integer disciplineId,
-            @RequestParam(required = false) Boolean completed) {
-        List<TaskSummaryDTO> tasks = taskService.findCurrentStudentTasksByDiscipline(disciplineId, completed);
+            @RequestParam(required = false) Boolean completed,
+            Pageable pageable) {
+        Page<TaskSummaryDTO> tasks = taskService.findCurrentStudentTasksByDiscipline(disciplineId, completed, pageable);
         return ResponseEntity.ok(tasks);
     }
 
