@@ -6,7 +6,7 @@ CREATE TABLE disciplines (
     code VARCHAR(20) NOT NULL,
     schedule_code VARCHAR(20) NOT NULL,
     location VARCHAR(255),
-    color_hex VARCHAR(7),
+    color_hex VARCHAR(7) DEFAULT '#6366F1' CHECK (color_hex ~ '^#([A-Fa-f0-9]{6})$'),
     workload_hours VARCHAR(10) NOT NULL DEFAULT 'H30' CHECK (workload_hours IN ('H30', 'H45', 'H60', 'H75', 'H90', 'H120')),
     absences_hours INTEGER NOT NULL DEFAULT 0 CHECK (absences_hours >= 0),
     active BOOLEAN NOT NULL DEFAULT TRUE,

@@ -42,7 +42,8 @@ public class Discipline {
     private String location;
 
     @Column(name = "color_hex", length = 7)
-    private String colorHex;
+    @Builder.Default
+    private String colorHex = "#6366F1";
 
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Carga horária é obrigatória")
