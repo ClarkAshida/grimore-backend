@@ -2,6 +2,7 @@ package com.grimore.service;
 
 import com.grimore.dto.request.CreateDisciplineDTO;
 import com.grimore.dto.request.ExtractedDisciplineDTO;
+import com.grimore.dto.response.BatchCreateReportDTO;
 import com.grimore.dto.response.DisciplineDTO;
 import com.grimore.dto.response.DisciplineSummaryDTO;
 import com.grimore.enums.WorkloadHours;
@@ -32,6 +33,72 @@ public class DisciplineService {
     private final DisciplineRepository disciplineRepository;
     private final StudentRepository studentRepository;
     private final DisciplineMapper mapper;
+
+    @Transactional
+    public BatchCreateReportDTO createBatchFromExtractedWithReport(List<ExtractedDisciplineDTO> dtos) {
+        if (dtos == null || dtos.isEmpty()) {
+            throw new BadRequestException("Lista de disciplinas não pode ser vazia");
+        }
+
+        Integer currentStudentId = SecurityUtils.getCurrentStudentId();
+        Student student = findStudentById(currentStudentId);
+
+        List<DisciplineDTO> createdDisciplines = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        for (int i = 0; i < dtos.size(); i++) {
+            ExtractedDisciplineDTO dto = dtos.get(i);
+            try {
+                validateExtractedDTO(dto);
+
+                String code = dto.code().trim().toUpperCase();
+                String schedule = dto.scheduleCode().trim().toUpperCase().replaceAll("\\s+", " ");
+                String name = dto.name().trim();
+                String location = dto.location() != null ? dto.location().trim() : null;
+
+                ExtractedDisciplineDTO normalized = new ExtractedDisciplineDTO(
+                        name, code, schedule, location, dto.workloadHours()
+                );
+
+                validateDuplicateCode(currentStudentId, normalized.code());
+                validateScheduleCode(normalized.scheduleCode());
+                verifyScheduleConflict(currentStudentId, normalized.scheduleCode(), null);
+
+                WorkloadHours workload = normalized.workloadHours() != null
+                        ? normalized.workloadHours()
+                        : ScheduleCodeParser.inferWorkloadFromScheduleCode(normalized.scheduleCode());
+
+                CreateDisciplineDTO createDTO = new CreateDisciplineDTO(
+                        normalized.name(),
+                        normalized.code(),
+                        normalized.scheduleCode(),
+                        normalized.location(),
+                        "#6366F1",
+                        workload
+                );
+
+                Discipline discipline = mapper.toEntity(createDTO);
+                discipline.setStudent(student);
+
+                Discipline saved = disciplineRepository.save(discipline);
+                createdDisciplines.add(mapper.toDTO(saved));
+
+            } catch (Exception ex) {
+                String error = String.format("Disciplina %d (%s): %s",
+                        i + 1,
+                        dto.code() != null ? dto.code() : "sem código",
+                        ex.getMessage()
+                );
+                errors.add(error);
+            }
+        }
+
+        if (createdDisciplines.isEmpty()) {
+            throw new BadRequestException("Nenhuma disciplina pôde ser criada. Erros: " + String.join("; ", errors));
+        }
+
+        return new BatchCreateReportDTO(createdDisciplines, errors);
+    }
 
     // ==================== Métodos para Estudante Autenticado ====================
 

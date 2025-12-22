@@ -1,7 +1,7 @@
 package com.grimore.controller;
 
-import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
-import org.springframework.boot.micrometer.metrics.actuate.endpoint.MetricsEndpoint;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.metrics.MetricsEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
