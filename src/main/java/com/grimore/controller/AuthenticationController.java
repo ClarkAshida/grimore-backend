@@ -41,4 +41,7 @@ public class AuthenticationController {
 
     // Forget Password
     // Reset Password
+    // Activate Account
+    // Resend Activation Email
+    // Login with OAuth (Google)
 }

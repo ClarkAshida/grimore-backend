@@ -13,7 +13,7 @@ public record CreateDisciplineDTO(
     String code,
 
     @NotBlank(message = "Código do horário é obrigatório")
-    @Pattern(regexp = "^[1-7]+[MVN][1-6]+$", message = "Formato de horário inválido. Use o padrão UFRN: dias(1-7) + turno(M/V/N) + slots(1-6) (ex: 246N12)")
+    @Pattern(regexp = "^([1-7]+[MTN][1-6]+)(\\s+[1-7]+[MTN][1-6]+)*$", message = "Formato de horário inválido. Use o padrão UFRN: dias(1-7) + turno(M/V/N) + slots(1-6) (ex: 246N12 ou 135M34 246N12)")
     String scheduleCode,
 
     String location,

@@ -52,7 +52,7 @@ public class DisciplineService {
                 validateExtractedDTO(dto);
 
                 String code = dto.code().trim().toUpperCase();
-                String schedule = dto.scheduleCode().trim().toUpperCase().replaceAll("\\s+", " ");
+                String schedule = normalizeScheduleCode(dto.scheduleCode());
                 String name = dto.name().trim();
                 String location = dto.location() != null ? dto.location().trim() : null;
 
@@ -79,6 +79,9 @@ public class DisciplineService {
 
                 Discipline discipline = mapper.toEntity(createDTO);
                 discipline.setStudent(student);
+
+                discipline.setCode(normalized.code());
+                discipline.setScheduleCode(normalized.scheduleCode());
 
                 Discipline saved = disciplineRepository.save(discipline);
                 createdDisciplines.add(mapper.toDTO(saved));
@@ -111,13 +114,33 @@ public class DisciplineService {
         Integer currentStudentId = SecurityUtils.getCurrentStudentId();
         Student student = findStudentById(currentStudentId);
 
-        validateDuplicateCode(currentStudentId, dto.code());
-        validateScheduleCode(dto.scheduleCode());
-        verifyScheduleConflict(currentStudentId, dto.scheduleCode(), null);
+        String normalizedCode = dto.code().trim().toUpperCase();
+        String normalizedSchedule = normalizeScheduleCode(dto.scheduleCode());
+        String normalizedName = dto.name().trim();
+        String normalizedLocation = dto.location() != null ? dto.location().trim() : null;
+        String color = (dto.colorHex() == null || dto.colorHex().isBlank()) ? "#6366F1" : dto.colorHex();
+        WorkloadHours workload = dto.workloadHours();
+
+        validateDuplicateCode(currentStudentId, normalizedCode);
+        validateScheduleCode(normalizedSchedule);
+        verifyScheduleConflict(currentStudentId, normalizedSchedule, null);
 
         try {
-            Discipline discipline = mapper.toEntity(dto);
+            CreateDisciplineDTO normalizedDto = new CreateDisciplineDTO(
+                    normalizedName,
+                    normalizedCode,
+                    normalizedSchedule,
+                    normalizedLocation,
+                    color,
+                    workload
+            );
+
+            Discipline discipline = mapper.toEntity(normalizedDto);
             discipline.setStudent(student);
+
+            discipline.setCode(normalizedCode);
+            discipline.setScheduleCode(normalizedSchedule);
+
             Discipline saved = disciplineRepository.save(discipline);
 
             log.info("Discipline created successfully for student {}: {} ({})",
@@ -141,30 +164,34 @@ public class DisciplineService {
         Integer currentStudentId = SecurityUtils.getCurrentStudentId();
         Student student = findStudentById(currentStudentId);
 
-        validateDuplicateCode(currentStudentId, dto.code());
-        validateScheduleCode(dto.scheduleCode());
-        verifyScheduleConflict(currentStudentId, dto.scheduleCode(), null);
+        String normalizedCode = dto.code().trim().toUpperCase();
+        String normalizedSchedule = normalizeScheduleCode(dto.scheduleCode());
+        String normalizedName = dto.name().trim();
+        String normalizedLocation = dto.location() != null ? dto.location().trim() : null;
+
+        validateDuplicateCode(currentStudentId, normalizedCode);
+        validateScheduleCode(normalizedSchedule);
+        verifyScheduleConflict(currentStudentId, normalizedSchedule, null);
 
         try {
-            // Inferir carga horária se não fornecida
             WorkloadHours workload = dto.workloadHours() != null
                     ? dto.workloadHours()
-                    : ScheduleCodeParser.inferWorkloadFromScheduleCode(dto.scheduleCode());
-
-            log.debug("Workload inferred for {}: {} (from schedule: {})",
-                    dto.code(), workload, dto.scheduleCode());
+                    : ScheduleCodeParser.inferWorkloadFromScheduleCode(normalizedSchedule);
 
             CreateDisciplineDTO createDTO = new CreateDisciplineDTO(
-                    dto.name(),
-                    dto.code(),
-                    dto.scheduleCode(),
-                    dto.location(),
-                    "#6366F1", // cor padrão
+                    normalizedName,
+                    normalizedCode,
+                    normalizedSchedule,
+                    normalizedLocation,
+                    "#6366F1",
                     workload
             );
 
             Discipline discipline = mapper.toEntity(createDTO);
             discipline.setStudent(student);
+            discipline.setCode(normalizedCode);
+            discipline.setScheduleCode(normalizedSchedule);
+
             Discipline saved = disciplineRepository.save(discipline);
 
             log.info("Discipline created from extraction for student {}: {} - {} (workload: {})",
@@ -198,32 +225,49 @@ public class DisciplineService {
             ExtractedDisciplineDTO dto = dtos.get(i);
             try {
                 validateExtractedDTO(dto);
-                validateDuplicateCode(currentStudentId, dto.code());
-                validateScheduleCode(dto.scheduleCode());
-                verifyScheduleConflict(currentStudentId, dto.scheduleCode(), null);
 
-                WorkloadHours workload = dto.workloadHours() != null
-                        ? dto.workloadHours()
-                        : ScheduleCodeParser.inferWorkloadFromScheduleCode(dto.scheduleCode());
+                String code = dto.code().trim().toUpperCase();
+                String schedule = normalizeScheduleCode(dto.scheduleCode());
+                String name = dto.name().trim();
+                String location = dto.location() != null ? dto.location().trim() : null;
+
+                ExtractedDisciplineDTO normalized = new ExtractedDisciplineDTO(
+                        name, code, schedule, location, dto.workloadHours()
+                );
+
+                validateDuplicateCode(currentStudentId, normalized.code());
+                validateScheduleCode(normalized.scheduleCode());
+                verifyScheduleConflict(currentStudentId, normalized.scheduleCode(), null);
+
+                WorkloadHours workload = normalized.workloadHours() != null
+                        ? normalized.workloadHours()
+                        : ScheduleCodeParser.inferWorkloadFromScheduleCode(normalized.scheduleCode());
 
                 CreateDisciplineDTO createDTO = new CreateDisciplineDTO(
-                        dto.name(),
-                        dto.code(),
-                        dto.scheduleCode(),
-                        dto.location(),
+                        normalized.name(),
+                        normalized.code(),
+                        normalized.scheduleCode(),
+                        normalized.location(),
                         "#6366F1",
                         workload
                 );
 
                 Discipline discipline = mapper.toEntity(createDTO);
                 discipline.setStudent(student);
+
+                discipline.setCode(normalized.code());
+                discipline.setScheduleCode(normalized.scheduleCode());
+
                 Discipline saved = disciplineRepository.save(discipline);
                 createdDisciplines.add(mapper.toDTO(saved));
 
-                log.debug("Batch creation - discipline {} created successfully", dto.code());
+                log.debug("Batch creation - discipline {} created successfully", normalized.code());
+
             } catch (Exception ex) {
                 String error = String.format("Disciplina %d (%s): %s",
-                        i + 1, dto.code() != null ? dto.code() : "sem código", ex.getMessage());
+                        i + 1,
+                        dto.code() != null ? dto.code() : "sem código",
+                        ex.getMessage());
                 errors.add(error);
                 log.warn("Error in batch creation: {}", error);
             }
@@ -300,14 +344,36 @@ public class DisciplineService {
             throw new BadRequestException("Você não tem acesso a esta disciplina");
         }
 
-        if (isCodeChanged(discipline, dto.code())) {
-            validateDuplicateCode(currentStudentId, dto.code());
+        String normalizedCode = dto.code().trim().toUpperCase();
+        String normalizedSchedule = normalizeScheduleCode(dto.scheduleCode());
+        String normalizedName = dto.name().trim();
+        String normalizedLocation = dto.location() != null ? dto.location().trim() : null;
+        String color = (dto.colorHex() == null || dto.colorHex().isBlank()) ? discipline.getColorHex() : dto.colorHex();
+        WorkloadHours workload = dto.workloadHours();
+
+        if (isCodeChanged(discipline, normalizedCode)) {
+            validateDuplicateCode(currentStudentId, normalizedCode);
         }
 
-        verifyScheduleConflict(currentStudentId, dto.scheduleCode(), id);
+        validateScheduleCode(normalizedSchedule);
+        verifyScheduleConflict(currentStudentId, normalizedSchedule, id);
 
         try {
-            mapper.updateEntity(dto, discipline);
+            CreateDisciplineDTO normalizedDto = new CreateDisciplineDTO(
+                    normalizedName,
+                    normalizedCode,
+                    normalizedSchedule,
+                    normalizedLocation,
+                    color,
+                    workload
+            );
+
+            mapper.updateEntity(normalizedDto, discipline);
+
+            // garantia extra
+            discipline.setCode(normalizedCode);
+            discipline.setScheduleCode(normalizedSchedule);
+
             Discipline updated = disciplineRepository.save(discipline);
 
             log.info("Discipline {} updated successfully by student {}", id, currentStudentId);
@@ -424,12 +490,25 @@ public class DisciplineService {
 
     // ==================== Métodos Privados de Validação ====================
 
+    private String normalizeScheduleCode(String scheduleCode) {
+        if (scheduleCode == null) return null;
+
+        String s = scheduleCode.trim().toUpperCase();
+        s = s.replace('\u00A0', ' ');          // NBSP
+        s = s.replaceAll("[,;|/]+", " ");      // separadores tolerados
+        s = s.replaceAll("\\s+", " ");         // colapsa espaços
+        s = s.replace('V', 'T');               // compatibilidade: V -> T
+        return s;
+    }
+
     /**
      * Verifica se há conflito de horário com outras disciplinas ativas do estudante.
      * Utiliza o ScheduleCodeParser refatorado para análise de slots.
      */
     private void verifyScheduleConflict(Integer studentId, String scheduleCode, Integer excludeDisciplineId) {
-        if (scheduleCode == null || scheduleCode.isBlank()) {
+        String normalizedNew = normalizeScheduleCode(scheduleCode);
+
+        if (normalizedNew == null || normalizedNew.isBlank()) {
             return;
         }
 
@@ -437,40 +516,51 @@ public class DisciplineService {
                 ? disciplineRepository.findByStudentIdAndActiveTrue(studentId)
                 : disciplineRepository.findByStudentIdAndActiveTrueAndIdNot(studentId, excludeDisciplineId);
 
-        for (Discipline discipline : activeDisciplines) {
-            if (ScheduleCodeParser.hasConflict(scheduleCode, discipline.getScheduleCode())) {
-                // Obtém informações detalhadas para mensagem de erro mais clara
-                var newScheduleInfo = ScheduleCodeParser.parseScheduleCode(scheduleCode);
-                var existingScheduleInfo = ScheduleCodeParser.parseScheduleCode(discipline.getScheduleCode());
+        for (Discipline existing : activeDisciplines) {
+            String normalizedExisting = normalizeScheduleCode(existing.getScheduleCode());
+
+            // Se alguma disciplina antiga tiver schedule vazio por dados legados, ignora
+            if (normalizedExisting == null || normalizedExisting.isBlank()) {
+                continue;
+            }
+
+            if (ScheduleCodeParser.hasConflict(normalizedNew, normalizedExisting)) {
+                var newInfo = ScheduleCodeParser.parseScheduleCode(normalizedNew);
+                var existingInfo = ScheduleCodeParser.parseScheduleCode(normalizedExisting);
 
                 throw new ConflictException(
-                        String.format("Conflito de horário detectado com a disciplina '%s' (%s). " +
-                                        "Novo horário: %s às %s. Horário existente: %s às %s.",
-                                discipline.getName(),
-                                discipline.getCode(),
-                                newScheduleInfo.getDaysDescription(),
-                                newScheduleInfo.getShiftsDescription(),
-                                existingScheduleInfo.getDaysDescription(),
-                                existingScheduleInfo.getShiftsDescription())
+                        String.format(
+                                "Conflito de horário detectado com a disciplina '%s' (%s). " +
+                                        "Novo horário: %s (%s). Horário existente: %s (%s).",
+                                existing.getName(),
+                                existing.getCode(),
+                                normalizedNew,
+                                newInfo.getDaysDescription() + " - " + newInfo.getShiftsDescription(),
+                                normalizedExisting,
+                                existingInfo.getDaysDescription() + " - " + existingInfo.getShiftsDescription()
+                        )
                 );
             }
         }
 
-        log.debug("No schedule conflict found for schedule code: {}", scheduleCode);
+        log.debug("No schedule conflict found for schedule code: {}", normalizedNew);
     }
 
     /**
      * Valida o formato do código de horário usando o ScheduleCodeParser.
      */
     private void validateScheduleCode(String scheduleCode) {
-        if (scheduleCode == null || scheduleCode.isBlank()) {
+        String normalized = normalizeScheduleCode(scheduleCode);
+
+        if (normalized == null || normalized.isBlank()) {
             throw new BadRequestException("Código de horário é obrigatório");
         }
 
-        if (!ScheduleCodeParser.isValidScheduleCode(scheduleCode)) {
+        if (!ScheduleCodeParser.isValidScheduleCode(normalized)) {
             throw new BadRequestException(
                     "Código de horário inválido: " + scheduleCode +
-                            ". Formato esperado: dias(2-6) + turno(M/T/N) + blocos(1-6). Ex: 246N12"
+                            ". Formato esperado: (dias 1-7)+(turno M/T/N)+(blocos). " +
+                            "Aceita múltiplos segmentos separados por espaço. Ex: '246N12' ou '246N12 7N12'."
             );
         }
     }
@@ -486,9 +576,13 @@ public class DisciplineService {
     }
 
     private void validateDuplicateCode(Integer studentId, String code) {
-        if (code != null && disciplineRepository.existsByStudentIdAndCodeAndActiveTrue(studentId, code)) {
+        if (code == null) return;
+
+        String normalizedCode = code.trim().toUpperCase();
+
+        if (disciplineRepository.existsByStudentIdAndCodeAndActiveTrue(studentId, normalizedCode)) {
             throw new ConflictException(
-                    "Disciplina ativa com código '" + code + "' já existe para este estudante"
+                    "Disciplina ativa com código '" + normalizedCode + "' já existe para este estudante"
             );
         }
     }
@@ -519,7 +613,9 @@ public class DisciplineService {
         if (dto.code() == null || dto.code().isBlank()) {
             throw new BadRequestException("Código da disciplina é obrigatório");
         }
-        if (dto.scheduleCode() == null || dto.scheduleCode().isBlank()) {
+
+        String normalizedSchedule = normalizeScheduleCode(dto.scheduleCode());
+        if (normalizedSchedule == null || normalizedSchedule.isBlank()) {
             throw new BadRequestException("Código de horário é obrigatório para inferir carga horária");
         }
     }

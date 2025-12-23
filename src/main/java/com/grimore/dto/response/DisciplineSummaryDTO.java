@@ -10,6 +10,7 @@ public record DisciplineSummaryDTO(
     String code,
     String colorHex,
     WorkloadHours workloadHours,
+    Integer absencesHours,
     Boolean active
 ) {}
 
