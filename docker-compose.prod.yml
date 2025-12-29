@@ -1,54 +1,29 @@
 version: "3.8"
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: grimore-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: grimore_db
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - grimore-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: grimore-api:latest
     container_name: grimore-api
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      DATABASE_URL: jdbc:postgresql://postgres:5432/grimore_db
+      DATABASE_URL: ${DATABASE_URL}
       DATABASE_USERNAME: ${DATABASE_USERNAME}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      JPA_SHOW_SQL: "false"
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO:-validate}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
     ports:
       - "8080:8080"
-    networks:
-      - grimore-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthy | grep UP || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-volumes:
-  postgres_data:
-
-networks:
-  grimore-network:
-    driver: bridge
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

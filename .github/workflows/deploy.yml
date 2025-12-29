@@ -1,55 +1,108 @@
-name: Deploy to EC2 (ECR + SSM)
+name: CI/CD Pipeline - Deploy to AWS EC2
 
 on:
   push:
-    branches: [ "main" ]
-
-permissions:
-  id-token: write
-  contents: read
+    branches:
+      - main
+  workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: grimore-api
-  IMAGE_TAG: latest
-  INSTANCE_ID: i-0c634e754116a73a3
+  DOCKER_IMAGE: grimore-api
+  DOCKER_TAG: ${{ github.sha }}
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Run tests
+        run: mvn clean test
 
-      - name: Build, tag, and push image to ECR
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} .
+          docker tag ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} ${{ env.DOCKER_IMAGE }}:latest
+
+      - name: Save Docker image
+        run: docker save ${{ env.DOCKER_IMAGE }}:latest | gzip > grimore-api.tar.gz
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "grimore-api.tar.gz,docker-compose.prod.yml"
+          target: "/home/ubuntu/grimore-api"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
-          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DATABASE_URL,DATABASE_USERNAME,DATABASE_PASSWORD,JWT_SECRET,OPENAI_API_KEY
+          script: |
+            cd /home/ubuntu/grimore-api
+            
+            # Criar arquivo .env
+            cat > .env << EOF
+            DATABASE_URL=$DATABASE_URL
+            DATABASE_USERNAME=$DATABASE_USERNAME
+            DATABASE_PASSWORD=$DATABASE_PASSWORD
+            JWT_SECRET=$JWT_SECRET
+            OPENAI_API_KEY=$OPENAI_API_KEY
+            JPA_DDL_AUTO=validate
+            JPA_SHOW_SQL=false
+            EOF
+            
+            # Carregar nova imagem Docker
+            docker load < grimore-api.tar.gz
+            
+            # Parar containers antigos
+            docker-compose -f docker-compose.prod.yml down || true
+            
+            # Remover imagens antigas (liberar espaço)
+            docker image prune -af
+            
+            # Iniciar containers
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            # Verificar status
+            docker-compose -f docker-compose.prod.yml ps
+            
+            # Aguardar healthcheck
+            sleep 15
+            
+            # Logs da aplicação
+            docker-compose -f docker-compose.prod.yml logs --tail=50 api
 
-      - name: Deploy on EC2 via SSM
-        run: |
-          aws ssm send-command \
-            --instance-ids "${{ env.INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Deploy Grimore API" \
-            --parameters commands='[
-              "set -e",
-              "cd /opt/grimore/compose",
-              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 343218226924.dkr.ecr.us-east-1.amazonaws.com",
-              "docker pull 343218226924.dkr.ecr.us-east-1.amazonaws.com/grimore-api:latest",
-              "docker compose -f docker-compose.prod.yml --env-file /opt/grimore/secrets/.env up -d",
-              "docker image prune -f"
-            ]'
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Verificar se API está respondendo
+            curl -f http://localhost:8080/healthy || exit 1
+            echo "✅ Deployment successful!"
