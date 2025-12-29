@@ -9,6 +9,7 @@ on:
 env:
   DOCKER_IMAGE: grimore-api
   DOCKER_TAG: ${{ github.sha }}
+  AWS_REGION: us-east-1
 
 jobs:
   build-and-deploy:
@@ -25,8 +26,8 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # - name: Run tests
-      # run: mvn clean test
+      - name: Run tests
+        run: mvn clean test
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
@@ -39,6 +40,51 @@ jobs:
       - name: Save Docker image
         run: docker save ${{ env.DOCKER_IMAGE }}:latest | gzip > grimore-api.tar.gz
 
+      # ========== NOVA SEÇÃO: CONFIGURAR AWS E ABRIR SSH ==========
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get GitHub Actions Runner IP
+        id: runner-ip
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "ip=$RUNNER_IP" >> $GITHUB_OUTPUT
+          echo "GitHub Actions Runner IP: $RUNNER_IP"
+
+      - name: Add Runner IP to Security Group
+        id: add-ip
+        run: |
+          echo "Security Group ID: ${{ secrets.EC2_SECURITY_GROUP_ID }}"
+          echo "Runner IP: ${{ steps.runner-ip.outputs.ip }}"
+          echo "AWS Region: ${{ env.AWS_REGION }}"
+
+          # Tentar adicionar a regra (ignora se já existe)
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.runner-ip.outputs.ip }}/32 \
+            --region ${{ env.AWS_REGION }} 2>&1 | tee output.txt
+
+          # Verificar se deu erro que não seja "já existe"
+          if grep -q "InvalidPermission.Duplicate" output.txt; then
+            echo "✅ IP already authorized (OK)"
+          elif grep -q "error" output.txt; then
+            echo "❌ Error adding IP to security group"
+            cat output.txt
+            exit 1
+          else
+            echo "✅ IP successfully added to security group"
+          fi
+
+          echo "Waiting 15 seconds for security group to propagate..."
+          sleep 15
+      # ========== FIM DA NOVA SEÇÃO ==========
+
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -47,6 +93,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "grimore-api.tar.gz,docker-compose.prod.yml"
           target: "/home/ubuntu/grimore-api"
+          timeout: 60s
+          command_timeout: 30m
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -60,6 +108,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 30m
           envs: DATABASE_URL,DATABASE_USERNAME,DATABASE_PASSWORD,JWT_SECRET,OPENAI_API_KEY
           script: |
             cd /home/ubuntu/grimore-api
@@ -81,7 +131,7 @@ jobs:
             # Parar containers antigos
             docker-compose -f docker-compose.prod.yml down || true
             
-            # Remover imagens antigas (liberar espaço)
+            # Remover imagens antigas
             docker image prune -af
             
             # Iniciar containers
@@ -102,7 +152,18 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 30s
           script: |
-            # Verificar se API está respondendo
-            curl -f http://localhost:8080/healthy || exit 1
+            curl -f http://localhost:8080/actuator/health || exit 1
             echo "✅ Deployment successful!"
+
+      # ========== CLEANUP: REMOVER IP DO SECURITY GROUP ==========
+      - name: Remove Runner IP from Security Group
+        if: always()  # Sempre executa, mesmo se houver falha
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.runner-ip.outputs.ip }}/32 \
+            --region ${{ env.AWS_REGION }} || echo "IP already removed or error occurred"
