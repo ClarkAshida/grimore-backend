@@ -26,8 +26,8 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      #- name: Run tests
-      #  run: mvn clean test
+      - name: Run tests
+        run: mvn clean test
 
       - name: Build with Maven
         run: mvn clean package -DskipTests
@@ -40,13 +40,22 @@ jobs:
       - name: Save Docker image
         run: docker save ${{ env.DOCKER_IMAGE }}:latest | gzip > grimore-api.tar.gz
 
-      # ========== NOVA SEÇÃO: CONFIGURAR AWS E ABRIR SSH ==========
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Test AWS Credentials
+        run: |
+          echo "Testing AWS credentials..."
+          aws sts get-caller-identity
+          
+          echo "Verifying security group exists..."
+          aws ec2 describe-security-groups \
+            --group-ids ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+            --region ${{ env.AWS_REGION }}
 
       - name: Get GitHub Actions Runner IP
         id: runner-ip
@@ -61,7 +70,7 @@ jobs:
           echo "Security Group ID: ${{ secrets.EC2_SECURITY_GROUP_ID }}"
           echo "Runner IP: ${{ steps.runner-ip.outputs.ip }}"
           echo "AWS Region: ${{ env.AWS_REGION }}"
-
+          
           # Tentar adicionar a regra (ignora se já existe)
           aws ec2 authorize-security-group-ingress \
             --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
@@ -69,7 +78,7 @@ jobs:
             --port 22 \
             --cidr ${{ steps.runner-ip.outputs.ip }}/32 \
             --region ${{ env.AWS_REGION }} 2>&1 | tee output.txt
-
+          
           # Verificar se deu erro que não seja "já existe"
           if grep -q "InvalidPermission.Duplicate" output.txt; then
             echo "✅ IP already authorized (OK)"
@@ -80,10 +89,9 @@ jobs:
           else
             echo "✅ IP successfully added to security group"
           fi
-
+          
           echo "Waiting 15 seconds for security group to propagate..."
           sleep 15
-      # ========== FIM DA NOVA SEÇÃO ==========
 
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -114,7 +122,7 @@ jobs:
           script: |
             cd /home/ubuntu/grimore-api
             
-            # Criar arquivo .env
+            echo "📝 Creating .env file..."
             cat > .env << EOF
             DATABASE_URL=$DATABASE_URL
             DATABASE_USERNAME=$DATABASE_USERNAME
@@ -125,26 +133,35 @@ jobs:
             JPA_SHOW_SQL=false
             EOF
             
-            # Carregar nova imagem Docker
+            echo "📦 Loading Docker image..."
             docker load < grimore-api.tar.gz
             
-            # Parar containers antigos
+            echo "🛑 Stopping old containers..."
             docker-compose -f docker-compose.prod.yml down || true
             
-            # Remover imagens antigas
+            echo "🧹 Cleaning old images..."
             docker image prune -af
             
-            # Iniciar containers
+            echo "🚀 Starting containers..."
             docker-compose -f docker-compose.prod.yml up -d
             
-            # Verificar status
+            echo "⏳ Waiting 30 seconds for application to start..."
+            sleep 30
+            
+            echo "📊 Container status:"
             docker-compose -f docker-compose.prod.yml ps
             
-            # Aguardar healthcheck
-            sleep 15
+            echo "📋 Container logs (last 100 lines):"
+            docker-compose -f docker-compose.prod.yml logs --tail=100 api
             
-            # Logs da aplicação
-            docker-compose -f docker-compose.prod.yml logs --tail=50 api
+            echo "🔍 Checking if port 8080 is listening..."
+            sudo netstat -tlnp | grep 8080 || echo "⚠️ Port 8080 not listening!"
+            
+            echo "🏥 Testing health endpoint from inside EC2..."
+            curl -v http://localhost:8080/actuator/health || echo "⚠️ Health check failed from localhost"
+            
+            echo "🌐 Testing from container network..."
+            docker exec grimore-api curl -f http://localhost:8080/actuator/health || echo "⚠️ Health check failed from container"
 
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
@@ -154,16 +171,41 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           timeout: 30s
           script: |
-            curl -f http://localhost:8080/actuator/health || exit 1
-            echo "✅ Deployment successful!"
+            echo "🔍 Verifying deployment..."
+            
+            # Verificar se container está rodando
+            if ! docker ps | grep -q grimore-api; then
+              echo "❌ Container is not running!"
+              docker-compose -f /home/ubuntu/grimore-api/docker-compose.prod.yml logs --tail=200 api
+              exit 1
+            fi
+            
+            echo "✅ Container is running"
+            
+            # Aguardar mais um pouco se necessário
+            sleep 10
+            
+            # Testar endpoint de health
+            if curl -f http://localhost:8080/actuator/health; then
+              echo ""
+              echo "✅ Deployment successful! API is healthy"
+              echo "🌐 Access your API at: http://${{ secrets.EC2_HOST }}:8080"
+            else
+              echo "⚠️ API not responding on port 8080"
+              echo "📋 Recent logs:"
+              docker-compose -f /home/ubuntu/grimore-api/docker-compose.prod.yml logs --tail=100 api
+              exit 1
+            fi
 
-      # ========== CLEANUP: REMOVER IP DO SECURITY GROUP ==========
       - name: Remove Runner IP from Security Group
-        if: always()  # Sempre executa, mesmo se houver falha
+        if: always()
         run: |
+          echo "🧹 Removing runner IP from security group..."
           aws ec2 revoke-security-group-ingress \
             --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
             --protocol tcp \
             --port 22 \
             --cidr ${{ steps.runner-ip.outputs.ip }}/32 \
             --region ${{ env.AWS_REGION }} || echo "IP already removed or error occurred"
+          
+          echo "✅ Cleanup completed"

@@ -16,7 +16,7 @@ WORKDIR /app
 
 USER root
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl \
+  && apt-get install -y --no-install-recommends curl wget \
   && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m appuser
